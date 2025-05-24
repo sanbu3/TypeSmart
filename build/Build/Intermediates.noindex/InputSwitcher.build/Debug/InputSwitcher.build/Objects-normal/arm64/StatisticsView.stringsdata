@@ -1,0 +1,56 @@
+{
+  "source": "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "查看输入法切换的使用情况和统计数据",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "使用统计",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "时间范围",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "暂无统计数据",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 147
+        }
+      },
+      {
+        "comment": "",
+        "key": "开始使用 InputSwitcher 后会自动收集统计数据",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "暂无数据",
+        "location": {
+          "startingColumn": 14,
+          "startingLine": 195
+        }
+      }
+    ]
+  },
+  "version": 1
+}

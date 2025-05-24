@@ -1,0 +1,108 @@
+{
+  "" : {
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.dia",
+    "emit-module-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master-emit-module.dia",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.swiftdeps"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AboutUsView~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppDelegate~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/AppState~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneralSettingsView~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSourceManager~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSwitcherApp.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/InputSwitcherApp~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/StatisticsView~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SwitchRecord.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/SwitchRecord~partial.swiftmodule"
+  },
+  "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/wang/Documents/InputSwitcher/build/Build/Intermediates.noindex/InputSwitcher.build/Debug/InputSwitcher.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

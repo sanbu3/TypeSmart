@@ -1,0 +1,2 @@
+Target dependency graph (1 target)
+Target 'InputSwitcher' in project 'InputSwitcher' (no dependencies)

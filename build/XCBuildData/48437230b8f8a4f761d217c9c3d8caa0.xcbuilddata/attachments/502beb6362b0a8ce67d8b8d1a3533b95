@@ -1,0 +1,70 @@
+{
+  "" : {
+    "const-values" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master.swiftconstvalues",
+    "dependencies" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master.d",
+    "diagnostics" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master.dia",
+    "emit-module-dependencies" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master-emit-module.dia",
+    "swift-dependencies" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcher-master.swiftdeps"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AboutUsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AboutUsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AboutUsView.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppDelegate.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppDelegate.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppDelegate.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppState.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppState.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/AppState.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView_New.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_New.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_New.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_New.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView_Old.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_Old.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_Old.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/ContentView_Old.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneralSettingsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneralSettingsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneralSettingsView.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSourceManager.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSourceManager.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSourceManager.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSwitcherApp.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcherApp.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcherApp.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/InputSwitcherApp.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/StatisticsView.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/StatisticsView.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/StatisticsView.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SwitchRecord.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/SwitchRecord.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/SwitchRecord.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/SwitchRecord.o"
+  },
+  "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/x86_64/GeneratedAssetSymbols.o"
+  }
+}

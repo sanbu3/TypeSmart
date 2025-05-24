@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>11</integer>
+	<key>logs</key>
+	<dict>
+		<key>93726293-9AC4-4B3A-9B1D-AC6A6A61D676</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>93726293-9AC4-4B3A-9B1D-AC6A6A61D676.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>1</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>3</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>InputSwitcher project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>InputSwitcher</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project InputSwitcher with scheme InputSwitcher and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>769784695.93980896</real>
+			<key>timeStoppedRecording</key>
+			<real>769784712.14008105</real>
+			<key>title</key>
+			<string>Building project InputSwitcher with scheme InputSwitcher and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>93726293-9AC4-4B3A-9B1D-AC6A6A61D676</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
