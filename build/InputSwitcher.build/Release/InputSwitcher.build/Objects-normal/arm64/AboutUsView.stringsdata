@@ -1,0 +1,88 @@
+{
+  "source": "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "InputSwitcher",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "智能输入法切换助手",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "应用信息",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "功能特色",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "支持和反馈",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 86
+        }
+      },
+      {
+        "comment": "",
+        "key": "如有问题或建议，欢迎通过以上方式联系我们",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 105
+        }
+      },
+      {
+        "comment": "",
+        "key": "访问官网",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "联系支持",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "© 2024 InputSwitcher. All rights reserved.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 116
+        }
+      },
+      {
+        "comment": "",
+        "key": "Built with ❤️ using SwiftUI",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 119
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/wang/Documents/InputSwitcher/build/Release/InputSwitcher.app/Contents/MacOS/InputSwitcher'
+relocations:     []
+...

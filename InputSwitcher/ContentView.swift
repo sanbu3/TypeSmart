@@ -15,13 +15,6 @@ struct ContentView: View {
     
     // Updated to use InputSourceInfo
     @State private var availableInputSources: [InputSourceInfo] = []
-    @State private var isAppPickerPresented: Bool = false
-    @State private var availableAppsForPicker: [AppInfo] = []
-    
-    // 应用选择器状态
-    @State private var isElegantAppPickerPresented: Bool = false
-    @State private var elegantAppPickerApps: [AppInfo] = []
-    @State private var elegantAppPickerSearch: String = ""
 
     enum SidebarNavigationItem: String, CaseIterable, Hashable, Identifiable {
         case rules = "应用规则"
@@ -171,24 +164,11 @@ struct ContentView: View {
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
                                         .frame(minWidth: 200)
                                         
-                                        Menu {
-                                            Button(action: {
-                                                elegantAppPickerApps = discoverAllApplications()
-                                                elegantAppPickerSearch = ""
-                                                isElegantAppPickerPresented = true
-                                            }) {
-                                                Label("从应用列表选择", systemImage: "list.bullet")
-                                            }
-                                            
-                                            Button(action: showNativeAppPicker) {
-                                                Label("浏览文件夹选择", systemImage: "folder")
-                                            }
-                                        } label: {
-                                            Image(systemName: "plus.app")
-                                                .font(.title3)
+                                        Button(action: showNativeAppPicker) {
+                                            Label("浏览选择应用", systemImage: "folder.badge.plus")
                                         }
                                         .buttonStyle(.bordered)
-                                        .help("选择应用")
+                                        .help("浏览文件夹选择应用")
                                         
                                         Button(action: showBundleIDHelp) {
                                             Image(systemName: "questionmark.circle")
@@ -246,22 +226,6 @@ struct ContentView: View {
                 }
             }
             .padding(viewPadding)
-        }
-        .sheet(isPresented: $isElegantAppPickerPresented) {
-            ModernAppPickerSheet(
-                allApps: elegantAppPickerApps,
-                searchText: $elegantAppPickerSearch,
-                onSelect: { app in
-                    if !appState.discoveredApplications.contains(app) {
-                        appState.discoveredApplications.append(app)
-                    }
-                    selectedDiscoveredAppID = app.id
-                    isElegantAppPickerPresented = false
-                },
-                onCancel: {
-                    isElegantAppPickerPresented = false
-                }
-            )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -357,29 +321,6 @@ struct ContentView: View {
         deleteRule(appIdentifier: appIdentifier)
         selectedDiscoveredAppID = nil
     }
-    
-    private func discoverAllApplications() -> [AppInfo] {
-        let fm = FileManager.default
-        let appDirs = ["/Applications", (fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications").path)]
-        var apps: [AppInfo] = []
-        for dir in appDirs {
-            if let enumerator = fm.enumerator(atPath: dir) {
-                for case let file as String in enumerator {
-                    if file.hasSuffix(".app") {
-                        let url = URL(fileURLWithPath: dir).appendingPathComponent(file)
-                        if let bundle = Bundle(url: url), let bundleID = bundle.bundleIdentifier {
-                            let appName = url.deletingPathExtension().lastPathComponent
-                            let appInfo = AppInfo(id: bundleID, name: appName, path: url)
-                            if !apps.contains(appInfo) {
-                                apps.append(appInfo)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return apps.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
 }
 
 // MARK: - Rule Row View
@@ -466,144 +407,6 @@ private struct RuleRowView: View {
                 selectedInputSourceID = first.id
             } else {
                 selectedInputSourceID = ""
-            }
-        }
-    }
-}
-
-// MARK: - Modern App Picker Sheet
-private struct ModernAppPickerSheet: View {
-    let allApps: [AppInfo]
-    @Binding var searchText: String
-    let onSelect: (AppInfo) -> Void
-    let onCancel: () -> Void
-    @Environment(\.presentationMode) var presentationMode
-    
-    var filteredApps: [AppInfo] {
-        if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return allApps
-        }
-        let lower = searchText.lowercased()
-        return allApps.filter { $0.name.lowercased().contains(lower) || $0.id.lowercased().contains(lower) }
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // 标题栏
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("选择应用")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    Text("找到 \(filteredApps.count) 个应用")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-                Button("取消") {
-                    onCancel()
-                    presentationMode.wrappedValue.dismiss()
-                }
-                .buttonStyle(.bordered)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-            
-            // 搜索框
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField("搜索应用名或 Bundle ID", text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(12)
-            .background(Color.secondary.opacity(0.1))
-            .cornerRadius(8)
-            .padding(.horizontal, 20)
-            
-            Divider()
-                .padding(.horizontal, 20)
-            
-            // 应用列表
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(filteredApps, id: \.id) { app in
-                        AppRowView(app: app) {
-                            onSelect(app)
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
-            }
-        }
-        .frame(minWidth: 500, minHeight: 400)
-        .background(Color(.windowBackgroundColor))
-    }
-}
-
-// MARK: - App Row View
-private struct AppRowView: View {
-    let app: AppInfo
-    let onSelect: () -> Void
-    @State private var isHovered = false
-    
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 12) {
-                // App icon
-                if let icon = app.icon {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .frame(width: 32, height: 32)
-                } else {
-                    Image(systemName: "app")
-                        .font(.title)
-                        .foregroundColor(.secondary)
-                        .frame(width: 32, height: 32)
-                }
-                
-                // App info
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(app.name)
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    Text(app.id)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-                
-                Spacer()
-                
-                // Arrow indicator
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .opacity(isHovered ? 1.0 : 0.5)
-            }
-            .padding(12)
-            .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isHovered ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                isHovered = hovering
             }
         }
     }

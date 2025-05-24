@@ -1,0 +1,96 @@
+{
+  "source": "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "通用设置",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 17
+        }
+      },
+      {
+        "comment": "",
+        "key": "配置 InputSwitcher 的基本设置和行为",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "启动设置",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "开机启动",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "系统启动时自动运行 InputSwitcher",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "应用管理",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "重新扫描系统中已安装的应用程序",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "刷新应用列表",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 59
+        }
+      },
+      {
+        "comment": "",
+        "key": "更新和支持",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 76
+        }
+      },
+      {
+        "comment": "",
+        "key": "检查是否有可用的应用程序更新",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "检查更新",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 90
+        }
+      }
+    ]
+  },
+  "version": 1
+}

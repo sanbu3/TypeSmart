@@ -1,18 +1,16 @@
 version: "Apple Swift version 6.1 (swiftlang-6.1.0.110.21 clang-1700.0.13.3)"
-options: "4a1c57238074a93fe3165f552ff4ddcbfcab921df968ee7c0994fc68c10661f9"
-build_start_time: [1748091362, 979072000]
-build_end_time: [1748091372, 973317000]
+options: "bbb6b08f7164102620c021af59d4633b1b4682bf9895e0d97636190ebe744e3c"
+build_start_time: [1748093284, 11952000]
+build_end_time: [1748093288, 723725000]
 inputs:
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift": !dirty [1748091353, 234416871]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift": !dirty [1748078836, 315515981]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift": !dirty [1748078194, 478836624]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView.swift": !dirty [1748091353, 225400262]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView_New.swift": !dirty [1748090297, 349178499]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView_Old.swift": !dirty [1748089786, 646072665]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift": !dirty [1748091353, 225422096]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift": !dirty [1748077632, 591254244]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSwitcherApp.swift": !dirty [1748076139, 972583524]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift": !dirty [1748091353, 243023688]
-  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SwitchRecord.swift": !dirty [1748075616, 181990136]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift": [1748091353, 234416871]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift": [1748091983, 772598771]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift": [1748078194, 478836624]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView.swift": [1748092933, 342599662]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift": [1748091353, 225422096]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift": [1748077632, 591254244]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSwitcherApp.swift": [1748076139, 972583524]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift": [1748091853, 265931085]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SwitchRecord.swift": [1748075616, 181990136]
   ? "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/DerivedSources/GeneratedAssetSymbols.swift"
-  : !dirty [1748091362, 427694399]
+  : [1748093283, 935683894]
