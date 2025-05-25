@@ -19,6 +19,7 @@ struct ContentView: View {
     enum SidebarNavigationItem: String, CaseIterable, Hashable, Identifiable {
         case rules = "应用规则"
         case statistics = "使用统计"
+        case logs = "日志记录"
         case general = "通用"
         case about = "关于"
 
@@ -28,6 +29,7 @@ struct ContentView: View {
             switch self {
             case .rules: return "list.star"
             case .statistics: return "chart.bar"
+            case .logs: return "doc.text"
             case .general: return "gear"
             case .about: return "info.circle"
             }
@@ -50,6 +52,8 @@ struct ContentView: View {
             case .statistics:
                 StatisticsView()
                     .environmentObject(appState)
+            case .logs:
+                SimpleLogsView()
             case .general:
                 GeneralSettingsView()
                     .environmentObject(appState)
@@ -58,22 +62,30 @@ struct ContentView: View {
             }
         }
         .onAppear {
+            SimpleLogManager.shared.addLog("ContentView 界面加载完成", category: "App")
+            
             if appState.discoveredApplications.isEmpty {
+                SimpleLogManager.shared.addLog("开始发现应用程序", category: "App")
                 appState.discoverApplications()
+                SimpleLogManager.shared.addLog("发现 \(appState.discoveredApplications.count) 个应用程序", category: "App")
             }
             loadInputSources()
 
             DispatchQueue.main.async {
                 if self.selectedDiscoveredAppID == nil, let firstAppID = self.appState.discoveredApplications.first?.id {
                     self.selectedDiscoveredAppID = firstAppID
+                    SimpleLogManager.shared.addLog("设置默认选中应用: \(firstAppID)", category: "UI")
                 }
                 if !self.availableInputSources.isEmpty && !self.availableInputSources.contains(where: { $0.id == self.selectedInputSourceID }) {
                     if let chineseSource = self.availableInputSources.first(where: { InputSourceManager.shared.getLanguageMode(for: $0.id) == .chinese }) {
                         self.selectedInputSourceID = chineseSource.id
+                        SimpleLogManager.shared.addLog("设置默认中文输入法: \(chineseSource.id)", category: "UI")
                     } else if let englishSource = self.availableInputSources.first(where: { InputSourceManager.shared.getLanguageMode(for: $0.id) == .english }) {
                         self.selectedInputSourceID = englishSource.id
+                        SimpleLogManager.shared.addLog("设置默认英文输入法: \(englishSource.id)", category: "UI")
                     } else if let firstSource = self.availableInputSources.first {
                         self.selectedInputSourceID = firstSource.id
+                        SimpleLogManager.shared.addLog("设置默认输入法: \(firstSource.id)", category: "UI")
                     }
                 }
             }
@@ -156,26 +168,101 @@ struct ContentView: View {
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                     
-                                    HStack(spacing: 8) {
-                                        TextField("请输入 Bundle ID", text: Binding(
-                                            get: { selectedDiscoveredAppID ?? "" },
-                                            set: { newValue in selectedDiscoveredAppID = newValue.isEmpty ? nil : newValue }
-                                        ))
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(minWidth: 200)
-                                        
-                                        Button(action: showNativeAppPicker) {
-                                            Label("浏览选择应用", systemImage: "folder.badge.plus")
+                                    VStack(spacing: 8) {
+                                        // 显示所选应用
+                                        HStack(spacing: 8) {
+                                            // 应用信息显示区域
+                                            HStack(spacing: 12) {
+                                                if let selectedID = selectedDiscoveredAppID,
+                                                   let selectedApp = appState.discoveredApplications.first(where: { $0.id == selectedID }) {
+                                                    // 显示已选择的应用
+                                                    if let icon = selectedApp.icon {
+                                                        Image(nsImage: icon)
+                                                            .resizable()
+                                                            .frame(width: 32, height: 32)
+                                                    } else {
+                                                        Image(systemName: "app")
+                                                            .font(.title2)
+                                                            .frame(width: 32, height: 32)
+                                                    }
+                                                    
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text(selectedApp.name)
+                                                            .font(.body)
+                                                            .fontWeight(.medium)
+                                                        Text(selectedApp.id)
+                                                            .font(.caption)
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                    
+                                                    Spacer()
+                                                } else {
+                                                    // 未选择应用时的占位显示
+                                                    Image(systemName: "app.dashed")
+                                                        .font(.title2)
+                                                        .foregroundColor(.secondary)
+                                                        .frame(width: 32, height: 32)
+                                                    
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text("未选择应用")
+                                                            .font(.body)
+                                                            .foregroundColor(.secondary)
+                                                        Text("请点击浏览按钮选择应用")
+                                                            .font(.caption)
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                    
+                                                    Spacer()
+                                                }
+                                            }
+                                            .padding(12)
+                                            .background(Color(NSColor.controlBackgroundColor))
+                                            .cornerRadius(8)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                            )
+                                            .frame(minWidth: 250, minHeight: 56)
+                                            
+                                            // 浏览按钮
+                                            Button(action: showNativeAppPicker) {
+                                                Image(systemName: "folder.badge.plus")
+                                            }
+                                            .buttonStyle(.bordered)
+                                            .help("浏览文件夹选择应用")
+                                            
+                                            // 帮助按钮
+                                            Button(action: showBundleIDHelp) {
+                                                Image(systemName: "questionmark.circle")
+                                                    .font(.title3)
+                                            }
+                                            .buttonStyle(.borderless)
+                                            .help("如何获取 Bundle ID？")
                                         }
-                                        .buttonStyle(.bordered)
-                                        .help("浏览文件夹选择应用")
                                         
-                                        Button(action: showBundleIDHelp) {
-                                            Image(systemName: "questionmark.circle")
-                                                .font(.title3)
+                                        // 手动输入Bundle ID（备用方式）
+                                        DisclosureGroup("手动输入 Bundle ID") {
+                                            HStack(spacing: 8) {
+                                                TextField("com.example.app", text: Binding(
+                                                    get: { 
+                                                        // 如果当前选择的应用不在列表中，则显示Bundle ID
+                                                        if let selectedID = selectedDiscoveredAppID,
+                                                           !appState.discoveredApplications.contains(where: { $0.id == selectedID }) {
+                                                            return selectedID
+                                                        }
+                                                        return ""
+                                                    },
+                                                    set: { newValue in 
+                                                        if !newValue.isEmpty {
+                                                            selectedDiscoveredAppID = newValue
+                                                        }
+                                                    }
+                                                ))
+                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .frame(minWidth: 200)
+                                            }
                                         }
-                                        .buttonStyle(.borderless)
-                                        .help("如何获取 Bundle ID？")
+                                        .font(.caption)
                                     }
                                 }
                                 
@@ -247,9 +334,11 @@ struct ContentView: View {
     }
 
     private func loadInputSources() {
+        SimpleLogManager.shared.addLog("开始加载输入法列表", category: "UI")
         print("[ContentView] loadInputSources: Starting to load input sources...")
         let sources = InputSourceManager.shared.getInputSources()
         
+        SimpleLogManager.shared.addLog("从 InputSourceManager 获得 \(sources.count) 个输入法", category: "InputSource")
         print("[ContentView] loadInputSources: Found \(sources.count) sources from InputSourceManager.")
 
         self.availableInputSources = sources.sorted { (s1, s2) -> Bool in
@@ -264,38 +353,50 @@ struct ContentView: View {
             return s1.localizedName.lowercased() < s2.localizedName.lowercased()
         }
         
+        SimpleLogManager.shared.addLog("输入法排序完成，可显示 \(self.availableInputSources.count) 个输入法", category: "UI")
         print("[ContentView] loadInputSources: Loaded and sorted \(self.availableInputSources.count) displayable input sources.")
         
         if !self.availableInputSources.isEmpty {
             if selectedInputSourceID.isEmpty || !self.availableInputSources.contains(where: {$0.id == selectedInputSourceID}) {
                 if let chineseSource = self.availableInputSources.first(where: { InputSourceManager.shared.getLanguageMode(for: $0.id) == .chinese }) {
                     selectedInputSourceID = chineseSource.id
+                    SimpleLogManager.shared.addLog("设置默认中文输入法: \(chineseSource.localizedName)", category: "UI")
                     print("[ContentView] loadInputSources: Defaulted selectedInputSourceID to Chinese: \(chineseSource.id) (\(chineseSource.localizedName)).")
                 } else if let englishSource = self.availableInputSources.first(where: { InputSourceManager.shared.getLanguageMode(for: $0.id) == .english }) {
                     selectedInputSourceID = englishSource.id
+                    SimpleLogManager.shared.addLog("设置默认英文输入法: \(englishSource.localizedName)", category: "UI")
                     print("[ContentView] loadInputSources: Defaulted selectedInputSourceID to English: \(englishSource.id) (\(englishSource.localizedName)).")
                 } else if let firstSource = self.availableInputSources.first {
                     selectedInputSourceID = firstSource.id
+                    SimpleLogManager.shared.addLog("设置默认输入法: \(firstSource.localizedName)", category: "UI")
                     print("[ContentView] loadInputSources: Defaulted selectedInputSourceID to first available: \(firstSource.id) (\(firstSource.localizedName)).")
                 }
             } else {
+                SimpleLogManager.shared.addLog("保持现有有效的输入法选择: \(selectedInputSourceID)", category: "UI")
                  print("[ContentView] loadInputSources: Retained existing valid selectedInputSourceID: \(selectedInputSourceID)")
             }
         } else {
             selectedInputSourceID = ""
+            SimpleLogManager.shared.addLog("没有可用的输入法，清空选择", category: "UI")
             print("[ContentView] loadInputSources: No input sources available. Cleared selectedInputSourceID.")
         }
     }
 
     private func addOrUpdateRule() {
         guard let appIdentifier = selectedDiscoveredAppID, !selectedInputSourceID.isEmpty else {
+            SimpleLogManager.shared.addLog("无法添加规则: 应用标识符或输入法ID为空", category: "Rules")
             print("[ContentView] addOrUpdateRule: App identifier or input source ID is empty. Cannot add/update rule.")
             return
         }
 
-        appState.appInputSourceMap[appIdentifier] = selectedInputSourceID
         let appName = appState.discoveredApplications.first(where: {$0.id == appIdentifier})?.name ?? appIdentifier
         let inputSourceName = availableInputSources.first(where: {$0.id == selectedInputSourceID})?.localizedName ?? selectedInputSourceID
+        
+        let isUpdate = appState.appInputSourceMap[appIdentifier] != nil
+        appState.appInputSourceMap[appIdentifier] = selectedInputSourceID
+        
+        SimpleLogManager.shared.addLog("\(isUpdate ? "更新" : "添加")应用规则: \(appName) -> \(inputSourceName)", category: "Rules")
+        
         print("[ContentView] addOrUpdateRule: Rule added/updated for \(appName) (ID: \(appIdentifier)) -> \(inputSourceName) (ID: \(selectedInputSourceID))")
     }
 
@@ -305,10 +406,14 @@ struct ContentView: View {
         let inputSourceName = availableInputSources.first(where: {$0.id == inputSourceID})?.localizedName ?? inputSourceID
         
         appState.appInputSourceMap.removeValue(forKey: appIdentifier)
+        
+        SimpleLogManager.shared.addLog("删除应用规则: \(appName) -> \(inputSourceName)", category: "Rules")
+        
         print("[ContentView] 删除规则: \(appName) (ID: \(appIdentifier)) 对应输入法 \(inputSourceName) (ID: \(inputSourceID))")
         
         if selectedDiscoveredAppID == appIdentifier {
             selectedDiscoveredAppID = nil
+            SimpleLogManager.shared.addLog("清空选中的应用ID: \(appIdentifier)", category: "UI")
         }
     }
     

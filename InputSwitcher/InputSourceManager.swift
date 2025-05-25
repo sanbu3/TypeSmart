@@ -24,16 +24,23 @@ class InputSourceManager {
     // 添加对 SwitchRecordManager 的引用
     private let recordManager = SwitchRecordManager.shared
 
-    private init() {}
+    private init() {
+        SimpleLogManager.shared.addLog("InputSourceManager 初始化完成", category: "InputSourceManager")
+        print("[InputSourceManager] InputSourceManager 初始化完成")
+    }
 
     // Updated function to return [InputSourceInfo]
     func getInputSources() -> [InputSourceInfo] {
         print("[InputSourceManager] getInputSources: Fetching all input sources.")
+        SimpleLogManager.shared.addLog("开始获取所有输入源", category: "InputSourceManager")
+        
         guard let sources = TISCreateInputSourceList(nil, false)?.takeRetainedValue() as? [TISInputSource] else {
             print("[InputSourceManager] getInputSources: Failed to retrieve any input sources from TISCreateInputSourceList.")
+            SimpleLogManager.shared.addLog("获取输入源列表失败", category: "InputSourceManager")
             return []
         }
         print("[InputSourceManager] getInputSources: Retrieved \(sources.count) raw sources. Now filtering.")
+        SimpleLogManager.shared.addLog("获取到 \(sources.count) 个原始输入源，开始筛选", category: "InputSourceManager")
 
         var detailedSources: [InputSourceInfo] = []
         // Define the expected type strings correctly
@@ -101,6 +108,7 @@ class InputSourceManager {
             detailedSources.append(InputSourceInfo(id: id, localizedName: localizedName, languages: languages))
         }
         print("[InputSourceManager] getInputSources: Finished filtering. Returning \(detailedSources.count) detailed sources.")
+        SimpleLogManager.shared.addLog("输入源筛选完成，返回 \(detailedSources.count) 个有效输入源", category: "InputSourceManager")
         return detailedSources
     }
 
@@ -201,10 +209,12 @@ class InputSourceManager {
     // 切换输入法并记录结果
     func switchInputSource(to targetID: String, fromAppID: String = "unknown", toAppID: String = "unknown") {
         print("[InputSourceManager] 尝试切换到输入法，ID: \(targetID)")
+        SimpleLogManager.shared.addLog("尝试切换输入法到: \(targetID)", category: "InputSourceManager")
 
         // 获取当前输入法
         guard let currentSourceTIS = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue() else {
             print("[InputSourceManager] 无法获取当前输入法。")
+            SimpleLogManager.shared.addLog("无法获取当前输入法", category: "InputSourceManager")
             // 记录失败的切换
             recordManager.addRecord(
                 fromAppID: fromAppID,

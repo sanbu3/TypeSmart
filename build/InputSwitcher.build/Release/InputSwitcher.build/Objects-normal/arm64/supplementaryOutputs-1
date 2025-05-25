@@ -1,9 +1,0 @@
-"/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift":
-  swiftmodule: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher.swiftmodule"
-  dependencies: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.d"
-  swiftsourceinfo: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher.swiftsourceinfo"
-  abi-baseline-json: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher.abi.json"
-  swiftdoc: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher.swiftdoc"
-  diagnostics: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.dia"
-  objc-header: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-Swift.h"
-  const-values: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.swiftconstvalues"

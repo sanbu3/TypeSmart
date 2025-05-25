@@ -1,7 +1,13 @@
-// filepath: /Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift
+import Foundation
 import SwiftUI
 import ServiceManagement // For SMAppService
 import Cocoa // For NSWorkspace, NSImage
+import ApplicationServices // For AXIsProcessTrusted
+
+// Notification names for inter-component communication
+extension NSNotification.Name {
+    static let statusBarVisibilityChanged = NSNotification.Name("statusBarVisibilityChanged")
+}
 
 // AppInfo struct: Defines the structure for holding application details.
 // It's Identifiable for use in SwiftUI Lists/Pickers.
@@ -50,6 +56,7 @@ public class AppState: ObservableObject {
                 return
             }
             // print("[AppState] appInputSourceMap.didSet: Value changed. Saving rules.")
+            SimpleLogManager.shared.addLog("应用输入源映射发生变化，现有 \\(appInputSourceMap.count) 个规则", category: "AppState")
             saveRules()
         }
     }
@@ -84,9 +91,38 @@ public class AppState: ObservableObject {
             }
         }
     }
+    
+    // Manages dock icon visibility
+    @Published public var hideDockIcon: Bool {
+        didSet {
+            if oldValue == hideDockIcon { return }
+            UserDefaults.standard.set(hideDockIcon, forKey: hideDockIconKey)
+            updateDockIconVisibility()
+        }
+    }
+    
+    // Manages status bar icon visibility
+    @Published public var hideStatusBarIcon: Bool {
+        didSet {
+            if oldValue == hideStatusBarIcon { return }
+            UserDefaults.standard.set(hideStatusBarIcon, forKey: hideStatusBarIconKey)
+            NotificationCenter.default.post(name: .statusBarVisibilityChanged, object: hideStatusBarIcon)
+        }
+    }
+    
+    // Auto-check permissions on startup
+    @Published public var autoCheckPermissions: Bool {
+        didSet {
+            if oldValue == autoCheckPermissions { return }
+            UserDefaults.standard.set(autoCheckPermissions, forKey: autoCheckPermissionsKey)
+        }
+    }
 
     private let userDefaultsKey = "appInputSourceMap"
     private let launchAtLoginKey = "launchAtLoginEnabled"
+    private let hideDockIconKey = "hideDockIcon"
+    private let hideStatusBarIconKey = "hideStatusBarIcon"
+    private let autoCheckPermissionsKey = "autoCheckPermissions"
 
     // Make init public if AppDelegate or other parts need to create it,
     // but for a singleton, private is correct.
@@ -94,8 +130,17 @@ public class AppState: ObservableObject {
     // Since we use AppState.shared, private init() is fine.
     private init() {
         self.launchAtLoginEnabled = UserDefaults.standard.bool(forKey: launchAtLoginKey)
+        // 调试时强制重置 dock/status bar 图标显示状态
+        #if DEBUG
+        self.hideDockIcon = false
+        self.hideStatusBarIcon = false
+        #else
+        self.hideDockIcon = UserDefaults.standard.object(forKey: hideDockIconKey) as? Bool ?? false
+        self.hideStatusBarIcon = UserDefaults.standard.bool(forKey: hideStatusBarIconKey)
+        #endif
+        self.autoCheckPermissions = UserDefaults.standard.object(forKey: autoCheckPermissionsKey) as? Bool ?? true // Default to auto-check
         loadRules()
-        print("AppState initialized, rules loaded, and launchAtLogin state set to: \(self.launchAtLoginEnabled).")
+        print("AppState initialized, rules loaded, and all settings loaded.")
     }
 
     // Discovers applications from standard locations.
@@ -103,11 +148,19 @@ public class AppState: ObservableObject {
         print("Starting application discovery...")
         var foundApps: Set<AppInfo> = []
         let fileManager = FileManager.default
-        let appDirectories = ["/Applications"] + NSSearchPathForDirectoriesInDomains(.applicationDirectory, .userDomainMask, true)
+        
+        var appDirectoriesPaths: [String] = ["/Applications", "/System/Applications"]
+        if let userAppsDir = fileManager.urls(for: .applicationDirectory, in: .userDomainMask).first?.path {
+            if !appDirectoriesPaths.contains(userAppsDir) { // Avoid duplicates if /Applications is same as user's
+                appDirectoriesPaths.append(userAppsDir)
+            }
+        }
 
-        for dirPath in appDirectories {
-            guard let dirURL = URL(string: "file://\(dirPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? dirPath)") else {
-                print("Failed to create URL for directory: \(dirPath)")
+        for dirPath in appDirectoriesPaths {
+            // Ensure dirPath is a valid path string before creating URL
+            guard !dirPath.isEmpty,
+                  let dirURL = URL(string: "file://\\(dirPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? dirPath)") else {
+                print("Failed to create URL for directory or invalid path: \\(dirPath)")
                 continue
             }
             do {
@@ -177,4 +230,77 @@ public class AppState: ObservableObject {
     //     UserDefaults.standard.set(launchAtLoginEnabled, forKey: launchAtLoginKey)
     //     print("Saved launchAtLoginEnabled state to UserDefaults: \(self.launchAtLoginEnabled)")
     // }
+    
+    // Update dock icon visibility
+    public func updateDockIconVisibility() {
+        DispatchQueue.main.async {
+            // 记录设置窗口
+            let settingsWindow = NSApp.windows.first { win in
+                win.title.contains("设置") || win.title.contains("TypeSmart")
+            }
+            let wasSettingsVisible = settingsWindow?.isVisible ?? false
+
+            if self.hideDockIcon {
+                // 只切换 activationPolicy，不隐藏设置窗口
+                NSApp.setActivationPolicy(.accessory)
+                SimpleLogManager.shared.addLog("隐藏 Dock 图标", category: "AppState")
+            } else {
+                NSApp.setActivationPolicy(.regular)
+                SimpleLogManager.shared.addLog("显示 Dock 图标", category: "AppState")
+                // 恢复设置窗口显示
+                if wasSettingsVisible, let win = settingsWindow {
+                    NSApp.activate(ignoringOtherApps: true)
+                    win.makeKeyAndOrderFront(nil)
+                }
+            }
+        }
+    }
+    
+    // Check accessibility permissions without prompt
+    public func checkAccessibilityPermissionsStatus() -> Bool {
+        return AXIsProcessTrusted()
+    }
+    
+    // Check accessibility permissions with optional prompt
+    public func checkAccessibilityPermissions(showPrompt: Bool = false) -> Bool {
+        if showPrompt {
+            let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+            return AXIsProcessTrustedWithOptions(options)
+        } else {
+            return AXIsProcessTrusted()
+        }
+    }
+    
+    // Request accessibility permissions manually
+    public func requestAccessibilityPermissions() {
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+            let _ = AXIsProcessTrustedWithOptions(options)
+            SimpleLogManager.shared.addLog("手动请求辅助功能权限", category: "AppState")
+        }
+    }
+    
+    // Check all permissions and return status
+    public func checkAllPermissions() -> [String: Bool] {
+        var permissions: [String: Bool] = [:]
+        
+        // Accessibility permission
+        permissions["accessibility"] = checkAccessibilityPermissionsStatus()
+        
+        // Add other permission checks here as needed
+        // For example: input monitoring, full disk access, etc.
+        
+        return permissions
+    }
+}
+
+// 清除统计数据扩展
+extension AppState {
+    public func clearStatistics() {
+        UserDefaults.standard.removeObject(forKey: "SwitchRecords")
+        // 如果有内存中的统计数据，也要清空
+        // self.statistics = []
+        objectWillChange.send()
+    }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct AboutUsView: View {
     // 统一的视图内边距
@@ -17,7 +18,7 @@ struct AboutUsView: View {
                             .foregroundColor(.accentColor)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("InputSwitcher")
+                            Text("TypeSmart")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             Text("智能输入法切换助手")
@@ -35,10 +36,10 @@ struct AboutUsView: View {
                             .foregroundColor(.primary)
                         
                         VStack(alignment: .leading, spacing: 12) {
-                            InfoRow(title: "版本", value: "1.0.0", systemImage: "number.circle")
+                            InfoRow(title: "版本", value: "1.5.0", systemImage: "number.circle")
                             InfoRow(title: "构建号", value: "2024.05.24", systemImage: "hammer.circle")
-                            InfoRow(title: "系统要求", value: "macOS 12.0+", systemImage: "desktopcomputer.and.arrow.down")
-                            InfoRow(title: "开发者", value: "Your Name", systemImage: "person.circle")
+                            InfoRow(title: "系统要求", value: "macOS 15.4+", systemImage: "desktopcomputer.and.arrow.down")
+                            InfoRow(title: "开发者", value: "王汪旺", systemImage: "person.circle")
                         }
                     }
                     .padding(contentSpacing)
@@ -89,15 +90,15 @@ struct AboutUsView: View {
                         
                         VStack(spacing: 12) {
                             HStack {
-                                Link(destination: URL(string: "https://www.example.com")!) {
+                                Link(destination: URL(string: "https://www.wangww.online")!) {
                                     Label("访问官网", systemImage: "globe")
                                 }
                                 .buttonStyle(.bordered)
                                 
                                 Spacer()
                                 
-                                Link(destination: URL(string: "mailto:support@example.com")!) {
-                                    Label("联系支持", systemImage: "envelope")
+                                Link(destination: URL(string: "mailto:sanbuwang@foxmail.com")!) {
+                                    Label("联系支持 (sanbuwang@foxmail.com)", systemImage: "envelope")
                                 }
                                 .buttonStyle(.bordered)
                             }
@@ -111,9 +112,27 @@ struct AboutUsView: View {
                     .padding(contentSpacing)
                 }
                 
+                // 内置帮助
+                GroupBox {
+                    VStack(alignment: .leading, spacing: contentSpacing) {
+                        Label("内置帮助", systemImage: "book.circle")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("• 应用无法启动：请确保已授予必要的系统权限，或右键选择'打开'")
+                            Text("• 输入法切换不工作：请检查辅助功能权限，并确认规则设置正确")
+                            Text("• 数据丢失：应用数据保存在用户目录 Library 文件夹，可通过日志功能查看记录")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
+                    .padding(contentSpacing)
+                }
+                
                 // 版权信息
                 VStack(spacing: 8) {
-                    Text("© 2024 InputSwitcher. All rights reserved.")
+                    Text("© 2024 王汪旺 (wangww.online). All rights reserved.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Text("Built with ❤️ using SwiftUI")
@@ -128,6 +147,28 @@ struct AboutUsView: View {
             .padding(viewPadding)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+    
+    private func moveAppToApplicationsFolder() {
+        let fileManager = FileManager.default
+        let appPath = Bundle.main.bundlePath
+        let destPath = "/Applications/" + (appPath as NSString).lastPathComponent
+        do {
+            if fileManager.fileExists(atPath: destPath) {
+                try fileManager.removeItem(atPath: destPath)
+            }
+            try fileManager.copyItem(atPath: appPath, toPath: destPath)
+            let alert = NSAlert()
+            alert.messageText = "已移动到“应用程序”文件夹"
+            alert.informativeText = "请从“应用程序”文件夹重新启动 TypeSmart。"
+            alert.runModal()
+            NSApp.terminate(nil)
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "移动失败"
+            alert.informativeText = "无法移动到 /Applications，请手动操作。\n错误信息：\(error.localizedDescription)"
+            alert.runModal()
+        }
     }
 }
 
