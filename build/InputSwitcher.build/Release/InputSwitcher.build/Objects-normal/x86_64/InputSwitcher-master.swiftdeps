@@ -1,0 +1,22 @@
+version: "Apple Swift version 6.1 (swiftlang-6.1.0.110.21 clang-1700.0.13.3)"
+options: "5dfddab9a0799fdf15ea586be894afd97181bb7267b7d93eb4b8751602be4927"
+build_start_time: [1748221815, 529917000]
+build_end_time: [1748221817, 489556000]
+inputs:
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AboutUsView.swift": !dirty [1748164169, 470730058]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift": !dirty [1748221677, 464053097]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppMover.swift": !dirty [1748220702, 784761987]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/AppState.swift": !dirty [1748207411, 756569134]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/ContentView.swift": !dirty [1748205289, 967299799]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/GeneralSettingsView.swift": !dirty [1748221783, 939224308]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSourceManager.swift": !dirty [1748221642, 135509592]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/InputSwitcherApp.swift": !dirty [1748076139, 972583524]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/LocaleManager.swift": !dirty [1748221568, 789005532]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/LogManager.swift": !dirty [1748103547, 831983428]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/LogsView.swift": !dirty [1748108573, 548223649]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SimpleLogManager.swift": !dirty [1748219580, 850668873]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SimpleLogsView.swift": !dirty [1748204944, 537840978]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/StatisticsView.swift": !dirty [1748204944, 537792770]
+  "/Users/wang/Documents/InputSwitcher/InputSwitcher/SwitchRecord.swift": !dirty [1748075616, 181990136]
+  ? "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/DerivedSources/GeneratedAssetSymbols.swift"
+  : !dirty [1748221815, 449589418]

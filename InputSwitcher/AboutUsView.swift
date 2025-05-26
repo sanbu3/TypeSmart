@@ -7,6 +7,13 @@ struct AboutUsView: View {
     private let sectionSpacing: CGFloat = 20
     private let contentSpacing: CGFloat = 16
     
+    var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "未知"
+    }
+    var build: String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "未知"
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: sectionSpacing) {
@@ -36,8 +43,8 @@ struct AboutUsView: View {
                             .foregroundColor(.primary)
                         
                         VStack(alignment: .leading, spacing: 12) {
-                            InfoRow(title: "版本", value: "1.5.0", systemImage: "number.circle")
-                            InfoRow(title: "构建号", value: "2024.05.24", systemImage: "hammer.circle")
+                            InfoRow(title: "版本", value: "1.8.0", systemImage: "number.circle")
+                            InfoRow(title: "构建号", value: "20250526", systemImage: "hammer.circle")
                             InfoRow(title: "系统要求", value: "macOS 15.4+", systemImage: "desktopcomputer.and.arrow.down")
                             InfoRow(title: "开发者", value: "王汪旺", systemImage: "person.circle")
                         }

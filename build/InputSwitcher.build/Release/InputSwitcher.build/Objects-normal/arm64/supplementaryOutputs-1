@@ -1,0 +1,9 @@
+"/Users/wang/Documents/InputSwitcher/InputSwitcher/AppDelegate.swift":
+  abi-baseline-json: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/TypeSmart.abi.json"
+  swiftdoc: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/TypeSmart.swiftdoc"
+  swiftmodule: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/TypeSmart.swiftmodule"
+  dependencies: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.d"
+  diagnostics: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.dia"
+  objc-header: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/TypeSmart-Swift.h"
+  swiftsourceinfo: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/TypeSmart.swiftsourceinfo"
+  const-values: "/Users/wang/Documents/InputSwitcher/build/InputSwitcher.build/Release/InputSwitcher.build/Objects-normal/arm64/InputSwitcher-master.swiftconstvalues"

@@ -14,7 +14,21 @@ class SimpleLogManager: ObservableObject {
         addLog("应用启动", category: "App")
     }
     
-    func addLog(_ message: String, category: String = "General") {
+    func addLog(_ message: String, category: String = "General", isError: Bool = false) {
+        // 只记录规则切换和错误相关的日志
+        let shouldLog = isError || 
+                        category == "Rules" || 
+                        category == "InputSwitch" || 
+                        category == "InputSourceManager" ||
+                        message.contains("切换") ||
+                        message.contains("规则") ||
+                        message.contains("错误") ||
+                        message.contains("失败")
+        
+        if !shouldLog {
+            return
+        }
+        
         let timestamp = DateFormatter.logFormatter.string(from: Date())
         let logEntry = "\(timestamp) [\(category)] \(message)"
         
@@ -25,8 +39,12 @@ class SimpleLogManager: ObservableObject {
             }
         }
         
-        // 输出到系统控制台
-        logger.info("\(category): \(message)")
+        // 输出到系统控制台 (只记录重要信息)
+        if isError {
+            logger.error("\(category): \(message)")
+        } else {
+            logger.info("\(category): \(message)")
+        }
         
         #if DEBUG
         print("📝 \(logEntry)")

@@ -3,18 +3,22 @@ import SwiftUI
 import ServiceManagement // For SMAppService
 import Cocoa // For NSWorkspace, NSImage
 import ApplicationServices // For AXIsProcessTrusted
+import os.log
 
-// Notification names for inter-component communication
-extension NSNotification.Name {
-    static let statusBarVisibilityChanged = NSNotification.Name("statusBarVisibilityChanged")
-}
+// Ensure this file is included in the InputSwitcher target in Xcode.
+// If not, add SimpleLogManager.swift to the target membership.
 
 // AppInfo struct: Defines the structure for holding application details.
 // It's Identifiable for use in SwiftUI Lists/Pickers.
-public struct AppInfo: Identifiable, Hashable, Equatable {
+public struct AppInfo: Identifiable, Hashable, Equatable, Codable {
     public let id: String // bundleIdentifier, primary key
     public let name: String
     public let path: URL // URL to the .app bundle
+    
+    // Keys for Codable
+    enum CodingKeys: String, CodingKey {
+        case id, name, path
+    }
 
     // Computed property to get the application icon
     public var icon: NSImage? {
@@ -101,14 +105,7 @@ public class AppState: ObservableObject {
         }
     }
     
-    // Manages status bar icon visibility
-    @Published public var hideStatusBarIcon: Bool {
-        didSet {
-            if oldValue == hideStatusBarIcon { return }
-            UserDefaults.standard.set(hideStatusBarIcon, forKey: hideStatusBarIconKey)
-            NotificationCenter.default.post(name: .statusBarVisibilityChanged, object: hideStatusBarIcon)
-        }
-    }
+
     
     // Auto-check permissions on startup
     @Published public var autoCheckPermissions: Bool {
@@ -117,12 +114,21 @@ public class AppState: ObservableObject {
             UserDefaults.standard.set(autoCheckPermissions, forKey: autoCheckPermissionsKey)
         }
     }
+    
+    // Control auto-switching functionality
+    @Published public var autoSwitchEnabled: Bool {
+        didSet {
+            if oldValue == autoSwitchEnabled { return }
+            UserDefaults.standard.set(autoSwitchEnabled, forKey: autoSwitchEnabledKey)
+        }
+    }
 
     private let userDefaultsKey = "appInputSourceMap"
     private let launchAtLoginKey = "launchAtLoginEnabled"
     private let hideDockIconKey = "hideDockIcon"
-    private let hideStatusBarIconKey = "hideStatusBarIcon"
     private let autoCheckPermissionsKey = "autoCheckPermissions"
+    private let autoSwitchEnabledKey = "autoSwitchEnabled"
+    private let discoveredAppsKey = "discoveredApplications"
 
     // Make init public if AppDelegate or other parts need to create it,
     // but for a singleton, private is correct.
@@ -133,13 +139,13 @@ public class AppState: ObservableObject {
         // 调试时强制重置 dock/status bar 图标显示状态
         #if DEBUG
         self.hideDockIcon = false
-        self.hideStatusBarIcon = false
         #else
         self.hideDockIcon = UserDefaults.standard.object(forKey: hideDockIconKey) as? Bool ?? false
-        self.hideStatusBarIcon = UserDefaults.standard.bool(forKey: hideStatusBarIconKey)
         #endif
         self.autoCheckPermissions = UserDefaults.standard.object(forKey: autoCheckPermissionsKey) as? Bool ?? true // Default to auto-check
+        self.autoSwitchEnabled = UserDefaults.standard.object(forKey: autoSwitchEnabledKey) as? Bool ?? true // Default to enabled
         loadRules()
+        loadDiscoveredApplications() // Load saved app metadata
         print("AppState initialized, rules loaded, and all settings loaded.")
     }
 
@@ -186,9 +192,37 @@ public class AppState: ObservableObject {
         }
         
         DispatchQueue.main.async {
-            self.discoveredApplications = Array(foundApps).sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
-            print("Discovered \(self.discoveredApplications.count) unique applications.")
+            let newlyDiscovered = Array(foundApps).sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
+            self.mergeDiscoveredApplications(newlyDiscovered)
+            print("Discovered \(newlyDiscovered.count) applications, merged with saved data. Total: \(self.discoveredApplications.count)")
         }
+        
+        // 合并所有规则中 bundleID 的 AppInfo，保证规则区始终有图标和名称
+        self.mergeRulesToApplications()
+    }
+
+    // 合并所有规则中 bundleID 的 AppInfo，保证规则区始终有图标和名称
+    public func mergeRulesToApplications() {
+        let allRuleIDs = Set(appInputSourceMap.keys)
+        var merged = Dictionary(uniqueKeysWithValues: discoveredApplications.map { ($0.id, $0) })
+        for bundleID in allRuleIDs {
+            if merged[bundleID] == nil {
+                // 占位 AppInfo
+                let placeholder = AppInfo(
+                    id: bundleID,
+                    name: bundleID,
+                    path: URL(fileURLWithPath: "/Applications")
+                )
+                merged[bundleID] = placeholder
+            }
+        }
+        discoveredApplications = Array(merged.values).sorted { $0.name.lowercased() < $1.name.lowercased() }
+    }
+
+    // 在 discoverApplications 后自动补全
+    public func discoverApplicationsAndMergeRules() {
+        discoverApplications()
+        mergeRulesToApplications()
     }
 
     // Loads saved rules from UserDefaults.
@@ -295,6 +329,72 @@ public class AppState: ObservableObject {
     }
 }
 
+// MARK: - App Metadata Persistence
+    
+extension AppState {
+    /// Saves the current discovered applications to UserDefaults
+    private func saveDiscoveredApplications() {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(discoveredApplications)
+            UserDefaults.standard.set(data, forKey: discoveredAppsKey)
+            print("Saved \(discoveredApplications.count) discovered applications to UserDefaults")
+        } catch {
+            print("Failed to save discovered applications: \(error)")
+        }
+    }
+    
+    /// Loads previously discovered applications from UserDefaults
+    private func loadDiscoveredApplications() {
+        guard let data = UserDefaults.standard.data(forKey: discoveredAppsKey) else {
+            print("No saved discovered applications found")
+            return
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let savedApps = try decoder.decode([AppInfo].self, from: data)
+            
+            // Filter out apps that no longer exist on the system
+            let existingApps = savedApps.filter { app in
+                FileManager.default.fileExists(atPath: app.path.path)
+            }
+            
+            self.discoveredApplications = existingApps
+            print("Loaded \(existingApps.count) discovered applications from UserDefaults")
+            
+            if existingApps.count < savedApps.count {
+                print("Removed \(savedApps.count - existingApps.count) applications that no longer exist")
+                // Save the cleaned list
+                saveDiscoveredApplications()
+            }
+        } catch {
+            print("Failed to load discovered applications: \(error)")
+        }
+    }
+    
+    /// Merges newly discovered apps with saved apps, preserving metadata
+    private func mergeDiscoveredApplications(_ newApps: [AppInfo]) {
+        var mergedApps: [String: AppInfo] = [:]
+        
+        // Start with existing saved apps
+        for app in discoveredApplications {
+            mergedApps[app.id] = app
+        }
+        
+        // Add or update with newly discovered apps
+        for app in newApps {
+            mergedApps[app.id] = app
+        }
+        
+        // Convert back to array and sort
+        self.discoveredApplications = Array(mergedApps.values).sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
+        
+        // Save the merged list
+        saveDiscoveredApplications()
+    }
+}
+
 // 清除统计数据扩展
 extension AppState {
     public func clearStatistics() {
@@ -302,5 +402,137 @@ extension AppState {
         // 如果有内存中的统计数据，也要清空
         // self.statistics = []
         objectWillChange.send()
+    }
+    
+    // MARK: - Application Recovery and Enhancement
+    
+    /// 恢复丢失的应用信息，主要用于应用重启后数据恢复
+    public func recoverMissingApplicationInfo() {
+        var needsSave = false
+        var updatedApps: [AppInfo] = []
+        
+        for app in discoveredApplications {
+            var updatedApp = app
+            var isUpdated = false
+            
+            // 检查应用名称是否为Bundle ID（表示名称丢失）
+            if app.name == app.id {
+                // 尝试通过Bundle ID查找真实的应用名称
+                if let recoveredInfo = recoverAppInfoByBundleID(app.id) {
+                    updatedApp = AppInfo(
+                        id: app.id,
+                        name: recoveredInfo.name,
+                        path: recoveredInfo.path
+                    )
+                    isUpdated = true
+                    SimpleLogManager.shared.addLog("恢复应用 \(app.id) 的名称: \(recoveredInfo.name)", category: "AppState")
+                }
+            }
+            
+            // 检查应用路径是否仍然有效
+            if !FileManager.default.fileExists(atPath: app.path.path) {
+                // 应用路径无效，尝试查找新位置
+                if let recoveredInfo = recoverAppInfoByBundleID(app.id) {
+                    updatedApp = AppInfo(
+                        id: app.id,
+                        name: recoveredInfo.name.isEmpty ? app.name : recoveredInfo.name,
+                        path: recoveredInfo.path
+                    )
+                    isUpdated = true
+                    SimpleLogManager.shared.addLog("恢复应用 \(app.id) 的路径: \(recoveredInfo.path.path)", category: "AppState")
+                }
+            }
+            
+            if isUpdated {
+                needsSave = true
+            }
+            
+            updatedApps.append(updatedApp)
+        }
+        
+        // 更新discoveredApplications并保存
+        if needsSave {
+            discoveredApplications = updatedApps.sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
+            saveDiscoveredApplications()
+            SimpleLogManager.shared.addLog("应用信息恢复完成，更新了 \(discoveredApplications.count) 个应用", category: "AppState")
+        }
+    }
+    
+    /// 通过Bundle ID查找并恢复应用信息
+    private func recoverAppInfoByBundleID(_ bundleID: String) -> AppInfo? {
+        // 1. 使用NSWorkspace查找应用
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            if let bundle = Bundle(url: appURL) {
+                let appName = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ??
+                             (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String) ??
+                             appURL.deletingPathExtension().lastPathComponent
+                
+                return AppInfo(id: bundleID, name: appName, path: appURL)
+            }
+        }
+        
+        // 2. 在常见目录中搜索
+        let searchPaths = ["/Applications", "/System/Applications", "/Applications/Utilities"]
+        
+        for searchPath in searchPaths {
+            let directoryURL = URL(fileURLWithPath: searchPath)
+            
+            do {
+                let appURLs = try FileManager.default.contentsOfDirectory(
+                    at: directoryURL,
+                    includingPropertiesForKeys: [.isApplicationKey],
+                    options: [.skipsHiddenFiles]
+                )
+                
+                for appURL in appURLs where appURL.pathExtension.lowercased() == "app" {
+                    if let bundle = Bundle(url: appURL),
+                       bundle.bundleIdentifier == bundleID {
+                        let appName = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ??
+                                     (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String) ??
+                                     appURL.deletingPathExtension().lastPathComponent
+                        
+                        return AppInfo(id: bundleID, name: appName, path: appURL)
+                    }
+                }
+            } catch {
+                continue
+            }
+        }
+        
+        return nil
+    }
+    
+    /// 增强规则映射中的应用信息，为规则中的Bundle ID添加完整的AppInfo
+    public func enhanceRuleApplicationInfo() {
+        let allRuleBundleIDs = Set(appInputSourceMap.keys)
+        var enhancedApps: [String: AppInfo] = [:]
+        
+        // 保留现有的应用信息
+        for app in discoveredApplications {
+            enhancedApps[app.id] = app
+        }
+        
+        // 为规则中缺失的Bundle ID添加信息
+        for bundleID in allRuleBundleIDs {
+            if enhancedApps[bundleID] == nil {
+                // 尝试恢复应用信息
+                if let recoveredInfo = recoverAppInfoByBundleID(bundleID) {
+                    enhancedApps[bundleID] = recoveredInfo
+                    SimpleLogManager.shared.addLog("为规则增强应用信息: \(bundleID) -> \(recoveredInfo.name)", category: "AppState")
+                } else {
+                    // 创建占位符，使用Bundle ID作为名称
+                    enhancedApps[bundleID] = AppInfo(
+                        id: bundleID,
+                        name: bundleID,
+                        path: URL(fileURLWithPath: "/Applications") // 占位路径
+                    )
+                    SimpleLogManager.shared.addLog("为规则创建占位符: \(bundleID)", category: "AppState")
+                }
+            }
+        }
+        
+        // 更新discoveredApplications
+        discoveredApplications = Array(enhancedApps.values).sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
+        saveDiscoveredApplications()
     }
 }

@@ -15,6 +15,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				LogManager.swift,
 			);
 			target = 21A88F2C2DE185FA0018465F /* InputSwitcher */;
 		};

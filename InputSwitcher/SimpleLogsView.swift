@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct SimpleLogsView: View {
@@ -11,27 +12,31 @@ struct SimpleLogsView: View {
     private let sectionSpacing: CGFloat = 20
     private let contentSpacing: CGFloat = 16
     
+    // 只展示与规则切换相关的日志
     var filteredLogs: [String] {
+        let keywords = ["规则", "切换", "输入法"]
+        let userLogs = logManager.recentLogs.filter { log in
+            keywords.contains(where: { log.contains($0) })
+        }
         if searchText.isEmpty {
-            return logManager.recentLogs
+            return userLogs
         } else {
-            return logManager.recentLogs.filter { log in
+            return userLogs.filter { log in
                 log.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: sectionSpacing) {
-            // 页面标题
-            VStack(alignment: .leading, spacing: 8) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: sectionSpacing) {
+                // 页面标题
+                VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("日志记录")
                         .font(.title2)
                         .fontWeight(.semibold)
-                    
                     Spacer()
-                    
                     // 操作按钮
                     HStack(spacing: 8) {
                         Button("导出日志") {
@@ -45,45 +50,23 @@ struct SimpleLogsView: View {
                     }
                 }
                 
-                Text("查看应用运行日志和诊断信息")
+                Text("查看自动切换规则的状态和结果")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            
-            // 统计信息
+            // 今日自动切换统计
             GroupBox {
                 VStack(alignment: .leading, spacing: contentSpacing) {
-                    Label("日志统计", systemImage: "chart.bar.doc.horizontal")
+                    Label("今日自动切换次数", systemImage: "arrow.triangle.2.circlepath")
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
                     HStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "doc.text")
-                                    .foregroundColor(.blue)
-                                Text("总日志数")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Text("\(logManager.recentLogs.count)")
+                            let todayCount = SwitchRecordManager.shared.records.filter { Calendar.current.isDateInToday($0.timestamp) && $0.isSuccessful }.count
+                            Text("\(todayCount)")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                         }
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(.green)
-                                Text("筛选结果")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Text("\(filteredLogs.count)")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                        }
-                        
                         Spacer()
                     }
                 }
@@ -158,10 +141,11 @@ struct SimpleLogsView: View {
                                 }
                             }
                         }
-                        .frame(maxHeight: 400)
+                        .frame(minHeight: 200, maxHeight: 600)
                     }
                 }
                 .padding(contentSpacing)
+            }
             }
         }
         .padding(viewPadding)

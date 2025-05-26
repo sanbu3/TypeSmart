@@ -23,6 +23,9 @@ class InputSourceManager {
     
     // 添加对 SwitchRecordManager 的引用
     private let recordManager = SwitchRecordManager.shared
+    
+    // Add reference to LocaleManager for language code validation
+    private let localeManager = LocaleManager.shared
 
     private init() {
         SimpleLogManager.shared.addLog("InputSourceManager 初始化完成", category: "InputSourceManager")
@@ -86,7 +89,8 @@ class InputSourceManager {
             var languages: [String] = []
             if let langPtr = TISGetInputSourceProperty(source, kTISPropertyInputSourceLanguages) {
                 if let langArray = Unmanaged<CFArray>.fromOpaque(langPtr).takeUnretainedValue() as? [String] {
-                    languages = langArray
+                    // Process language codes through LocaleManager to avoid eligibility warnings
+                    languages = langArray.map { self.localeManager.cleanLanguageCode($0) }
                 }
             }
 
@@ -132,7 +136,10 @@ class InputSourceManager {
         }
 
         for langCode in languages {
-            let lowercasedLang = langCode.lowercased()
+            // Use localeManager to validate and clean language codes
+            let validLanguageCode = localeManager.cleanLanguageCode(langCode)
+            let lowercasedLang = validLanguageCode.lowercased()
+            
             if lowercasedLang.hasPrefix("zh") {
                 return .chinese
             }

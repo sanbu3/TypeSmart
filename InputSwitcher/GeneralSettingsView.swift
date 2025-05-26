@@ -1,240 +1,238 @@
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
+import Foundation
 
 struct GeneralSettingsView: View {
     @ObservedObject var appState = AppState.shared
     @State private var requestingPermission = false
-    @State private var showMoveAppSheet = false
-
-    // 统一的视图内边距和间距
-    private let viewPadding: CGFloat = 20
-    private let sectionSpacing: CGFloat = 20
-    private let contentSpacing: CGFloat = 16
+    @State private var showMoveToAppFolderAlert = false
+    @State private var moveInProgress = false
+    @State private var moveError: String? = nil
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: sectionSpacing) { // 统一的垂直间距
-                // 界面设置
-                GroupBox(label: Label("界面设置", systemImage: "paintbrush").font(.headline).padding(.top, sectionSpacing).padding(.bottom, sectionSpacing)) {
-                    VStack(alignment: .leading, spacing: contentSpacing) { // 统一的内容间距
-                        Toggle(isOn: $appState.hideDockIcon) {
-                            Label("隐藏 Dock 栏图标", systemImage: "dock.rectangle")
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(spacing: 20) {
+                // 检查是否在/Applications目录
+                if !isInApplicationsFolder() {
+                    GroupBox {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
+                                Text("建议将 TypeSmart 移动到“应用程序”文件夹")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                            Text("为保证权限和自动启动等功能正常，建议将本应用移动到 /Applications 文件夹。")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            if let moveError = moveError {
+                                Text("移动失败：\(moveError)")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                            HStack {
+                                Button(action: moveToApplicationsFolder) {
+                                    if moveInProgress {
+                                        ProgressView()
+                                    } else {
+                                        Label("一键移动到应用程序文件夹", systemImage: "arrow.right.square")
+                                    }
+                                }
+                                .disabled(moveInProgress)
+                                .buttonStyle(.borderedProminent)
+                                Button(action: showManualMoveHelp) {
+                                    Label("手动操作说明", systemImage: "questionmark.circle")
+                                }
+                                .buttonStyle(.bordered)
+                            }
                         }
-                        .help("关闭后，TypeSmart 会在 Dock 栏显示图标，便于从任务栏切回应用。")
-
-                        Toggle(isOn: $appState.hideStatusBarIcon) {
-                            Label(appState.hideStatusBarIcon ? "不在菜单栏显示" : "在菜单栏显示", systemImage: appState.hideStatusBarIcon ? "menubar.arrow.up.rectangle" : "menubar.dock.rectangle")
-                        }
-                        .help("控制 TypeSmart 是否在屏幕顶部菜单栏显示快捷入口。")
+                        .padding(8)
                     }
-                    .padding(viewPadding) // 统一的内边距
                 }
 
-                // 应用程序管理
-                GroupBox(label: Label("应用程序管理", systemImage: "folder").font(.headline).padding(.top, sectionSpacing).padding(.bottom, sectionSpacing)) {
-                    VStack(alignment: .leading, spacing: contentSpacing) {
-                        Text("⚠️ 建议将 TypeSmart 移动到“应用程序”文件夹，以获得最佳兼容性。")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-
-                        Button {
-                            showMoveAppSheet = true
-                        } label: {
-                            Label("移动到应用程序文件夹", systemImage: "folder")
+                // 状态栏配置
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("状态栏配置", systemImage: "menubar.rectangle")
+                                .font(.headline)
+                            Spacer()
                         }
-                        .buttonStyle(.borderedProminent)
-                        .help("将 TypeSmart 移动到 /Applications 目录，获得更好兼容性")
+                        
+                        Toggle(isOn: $appState.autoSwitchEnabled) {
+                            HStack {
+                                Label("自动切换输入法", systemImage: "keyboard.fill")
+                                Spacer()
+                                Text(appState.autoSwitchEnabled ? "已启用" : "已暂停")
+                                    .font(.caption)
+                                    .foregroundColor(appState.autoSwitchEnabled ? .green : .orange)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        .help("在不同应用程序间自动切换对应的输入法")
+                        
+                        Divider()
+                        
+                        Toggle(isOn: $appState.hideDockIcon) {
+                            HStack {
+                                Label("隐藏 Dock 图标", systemImage: "dock.rectangle")
+                                Spacer()
+                                Text(appState.hideDockIcon ? "已隐藏" : "已显示")
+                                    .font(.caption)
+                                    .foregroundColor(appState.hideDockIcon ? .secondary : .blue)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        .help("隐藏后，TypeSmart 仅在状态栏显示图标")
                     }
-                    .padding(viewPadding) // 统一的内边距
+                    .padding()
                 }
 
                 // 权限管理
-                GroupBox(label: Label("权限管理", systemImage: "lock.shield").font(.headline).padding(.top, sectionSpacing).padding(.bottom, sectionSpacing)) {
-                    HStack(spacing: contentSpacing) {
-                        Label("辅助功能权限", systemImage: "hand.raised")
-                        Capsule()
-                            .fill(appState.checkAccessibilityPermissionsStatus() ? Color.green : Color.red)
-                            .frame(width: 48, height: 20)
-                            .overlay(
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("权限管理", systemImage: "lock.shield")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            Label("辅助功能权限", systemImage: "hand.raised")
+                            Spacer()
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(appState.checkAccessibilityPermissionsStatus() ? Color.green : Color.red)
+                                    .frame(width: 8, height: 8)
                                 Text(appState.checkAccessibilityPermissionsStatus() ? "已授权" : "未授权")
                                     .font(.caption)
-                                    .foregroundColor(.white)
-                            )
-                        Spacer()
-                        Button {
-                            requestingPermission = true
-                            appState.requestAccessibilityPermissions()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                requestingPermission = false
+                                    .foregroundColor(appState.checkAccessibilityPermissionsStatus() ? .green : .red)
+                                    .fontWeight(.medium)
                             }
-                        } label: {
-                            Label(requestingPermission ? "已请求..." : "手动申请", systemImage: "person.badge.key")
-                                .frame(minWidth: 80)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(requestingPermission)
-                        .help("如未弹出系统授权窗口，请手动前往系统设置-隐私-辅助功能添加 TypeSmart。")
+                        
+                        if !appState.checkAccessibilityPermissionsStatus() {
+                            Divider()
+                            
+                            Button {
+                                requestingPermission = true
+                                appState.requestAccessibilityPermissions()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    requestingPermission = false
+                                }
+                            } label: {
+                                HStack {
+                                    Image(systemName: requestingPermission ? "hourglass" : "person.badge.key")
+                                    Text(requestingPermission ? "正在请求权限..." : "申请辅助功能权限")
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(requestingPermission)
+                            .help("如未弹出系统授权窗口，请手动前往系统设置-隐私-辅助功能添加 TypeSmart")
+                        }
                     }
-                    .padding(viewPadding) // 统一的内边距
+                    .padding()
                 }
 
                 // 启动设置
-                GroupBox(label: Label("启动设置", systemImage: "arrow.triangle.2.circlepath").font(.headline).padding(.top, sectionSpacing).padding(.bottom, sectionSpacing)) {
-                    VStack(alignment: .leading, spacing: contentSpacing) {
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("启动设置", systemImage: "power")
+                                .font(.headline)
+                            Spacer()
+                        }
+                        
                         Toggle(isOn: $appState.launchAtLoginEnabled) {
-                            Label("开机自动启动", systemImage: "bolt.fill")
+                            HStack {
+                                Label("开机自动启动", systemImage: "bolt.fill")
+                                Spacer()
+                                Text(appState.launchAtLoginEnabled ? "已启用" : "已禁用")
+                                    .font(.caption)
+                                    .foregroundColor(appState.launchAtLoginEnabled ? .green : .secondary)
+                                    .fontWeight(.medium)
+                            }
                         }
-                        .help("开启后，TypeSmart 会随系统自动启动。")
-
+                        .help("TypeSmart 会随系统自动启动")
+                        
+                        Divider()
+                        
                         Toggle(isOn: $appState.autoCheckPermissions) {
-                            Label("启动时自动检测权限", systemImage: "checkmark.shield")
+                            HStack {
+                                Label("启动时自动检测权限", systemImage: "checkmark.shield")
+                                Spacer()
+                                Text(appState.autoCheckPermissions ? "已启用" : "已禁用")
+                                    .font(.caption)
+                                    .foregroundColor(appState.autoCheckPermissions ? .green : .secondary)
+                                    .fontWeight(.medium)
+                            }
                         }
-                        .help("每次启动时自动检测并申请辅助功能权限，确保功能正常。")
+                        .help("每次启动时自动检测并申请辅助功能权限")
                     }
-                    .padding(viewPadding) // 统一的内边距
-                }
-
-                // 帮助与反馈
-                GroupBox(label: Label("帮助与反馈", systemImage: "questionmark.circle").font(.headline).padding(.top, sectionSpacing).padding(.bottom, sectionSpacing)) {
-                    HStack(spacing: contentSpacing) {
-                        Link(destination: URL(string: "mailto:sanbuwang@foxmail.com")!) {
-                            Label("联系开发者 (sanbuwang@foxmail.com)", systemImage: "envelope")
-                        }
-                        Link(destination: URL(string: "https://wangww.online")!) {
-                            Label("访问官网", systemImage: "safari")
-                        }
-                    }
-                    .padding(viewPadding) // 统一的内边距
+                    .padding()
                 }
             }
-            .padding(viewPadding)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(minWidth: 400, minHeight: 700)
         .onAppear {
             _ = appState.checkAccessibilityPermissionsStatus()
         }
-        .sheet(isPresented: $showMoveAppSheet) {
-            MoveAppSheetView(showSheet: $showMoveAppSheet)
-        }
     }
 
-    private func moveAppToApplicationsFolder() {
+    // 检查当前App是否在/Applications目录
+    private func isInApplicationsFolder() -> Bool {
         let appPath = Bundle.main.bundlePath
-        let destPath = "/Applications/" + (appPath as NSString).lastPathComponent
-        let fileManager = FileManager.default
-        let appURL = URL(fileURLWithPath: appPath)
-        let destURL = URL(fileURLWithPath: destPath)
-        do {
-            if fileManager.fileExists(atPath: destPath) {
-                try fileManager.removeItem(atPath: destPath)
-            }
-            try fileManager.copyItem(atPath: appPath, toPath: destPath)
-            let alert = NSAlert()
-            alert.messageText = "已移动到“应用程序”文件夹"
-            alert.informativeText = "请从“应用程序”文件夹重新启动 TypeSmart。"
-            alert.runModal()
-            NSApp.terminate(nil)
-        } catch {
-            // 权限不足时自动打开 Finder 让用户手动拖动
-            NSWorkspace.shared.activateFileViewerSelecting([appURL, destURL])
-            let alert = NSAlert()
-            alert.messageText = "移动失败"
-            alert.informativeText = "无法自动移动到 /Applications，请手动将 TypeSmart 拖动到应用程序文件夹。\n错误信息：\(error.localizedDescription)"
-            alert.runModal()
-        }
-    }
-}
-
-struct MoveAppSheetView: View {
-    @Binding var showSheet: Bool
-    var body: some View {
-        VStack(spacing: 24) {
-            Text("将 TypeSmart 拖动到应用程序文件夹")
-                .font(.title2)
-                .bold()
-            if let icon = NSApp.applicationIconImage {
-                DraggableImageView(image: icon)
-                    .frame(width: 96, height: 96)
-                    .cornerRadius(20)
-                    .shadow(radius: 8)
-            }
-            Text("1. 请在访达中打开“应用程序”文件夹\n2. 将上方 TypeSmart 图标拖动到“应用程序”窗口\n3. 拖拽完成后可从应用程序文件夹重新启动 TypeSmart")
-                .multilineTextAlignment(.center)
-                .font(.body)
-                .foregroundColor(.secondary)
-            Button("打开“应用程序”文件夹") {
-                let url = URL(fileURLWithPath: "/Applications")
-                NSWorkspace.shared.open(url)
-            }
-            .buttonStyle(.borderedProminent)
-            Button("完成") {
-                showSheet = false
-            }
-            .padding(.top, 8)
-        }
-        .padding(32)
-        .frame(width: 340)
-        .background(AlwaysOnTopWindow())
-    }
-}
-
-struct DraggableImageView: NSViewRepresentable {
-    let image: NSImage
-
-    func makeNSView(context: Context) -> NSImageView {
-        let imageView = NSImageView(image: image)
-        imageView.unregisterDraggedTypes()
-        imageView.registerForDraggedTypes([.fileURL])
-        imageView.addGestureRecognizer(NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.startDragging)))
-        return imageView
+        return appPath.hasPrefix("/Applications") || appPath.hasPrefix("/System/Applications")
     }
 
-    func updateNSView(_ nsView: NSImageView, context: Context) {
-        nsView.image = image
-    }
-
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(image: image)
-    }
-
-    class Coordinator: NSObject, NSDraggingSource, NSFilePromiseProviderDelegate {
-        let image: NSImage
-
-        init(image: NSImage) {
-            self.image = image
-        }
-
-        @objc func startDragging(sender: NSGestureRecognizer) {
-            guard let imageView = sender.view as? NSImageView else { return }
-            let filePromise = NSFilePromiseProvider(fileType: UTType.png.identifier, delegate: self)
-            let draggingItem = NSDraggingItem(pasteboardWriter: filePromise)
-            draggingItem.setDraggingFrame(imageView.bounds, contents: image)
-            imageView.beginDraggingSession(with: [draggingItem], event: NSApp.currentEvent!, source: self)
-        }
-
-        func filePromiseProvider(_ filePromiseProvider: NSFilePromiseProvider, fileNameForType fileType: String) -> String {
-            return "TypeSmartAppIcon.png"
-        }
-
-        func filePromiseProvider(_ filePromiseProvider: NSFilePromiseProvider, writePromiseTo url: URL, completionHandler: @escaping (Error?) -> Void) {
-            if let tiffData = image.tiffRepresentation {
-                do {
-                    try tiffData.write(to: url)
-                    completionHandler(nil)
-                } catch {
-                    completionHandler(error)
+    // 自动移动到/Applications并重启（带权限提升，失败时自动弹出Finder）
+    private func moveToApplicationsFolder() {
+        moveInProgress = true
+        moveError = nil
+        let srcPath = Bundle.main.bundlePath
+        let appName = (srcPath as NSString).lastPathComponent
+        let destPath = "/Applications/\(appName)"
+        let script = "do shell script \"cp -R '\(srcPath)' '\(destPath)'\" with administrator privileges"
+        var error: NSDictionary?
+        if let scriptObject = NSAppleScript(source: script) {
+            let _ = scriptObject.executeAndReturnError(&error)
+            if error == nil {
+                // 拷贝成功，重启新副本
+                let task = Process()
+                task.launchPath = "/usr/bin/open"
+                task.arguments = ["-n", destPath]
+                try? task.run()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    NSApp.terminate(nil)
                 }
+            } else {
+                moveError = error?[NSAppleScript.errorMessage] as? String ?? "未知错误，可能已取消或权限不足"
+                // 自动弹出 Finder，方便手动拖动
+                let appURL = URL(fileURLWithPath: srcPath)
+                NSWorkspace.shared.activateFileViewerSelecting([appURL])
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
             }
+        } else {
+            moveError = "无法创建权限请求脚本"
+            let appURL = URL(fileURLWithPath: srcPath)
+            NSWorkspace.shared.activateFileViewerSelecting([appURL])
+            NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
         }
+        moveInProgress = false
+    }
 
-        func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
-            return .copy
-        }
-
-        func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-            // Handle end of dragging if needed
-        }
+    // 手动操作说明弹窗
+    private func showManualMoveHelp() {
+        let alert = NSAlert()
+        alert.messageText = "如何手动移动 TypeSmart 到应用程序文件夹？"
+        alert.informativeText = "1. 关闭本应用\n2. 在访达中将 TypeSmart 拖动到 /Applications 文件夹\n3. 重新打开 TypeSmart"
+        alert.alertStyle = .informational
+        alert.runModal()
     }
 }
 

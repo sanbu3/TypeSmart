@@ -25,30 +25,31 @@ struct StatisticsView: View {
     private var commonPairs: [(fromApp: String, toApp: String, count: Int)] { recordManager.getCommonAppSwitchPairs() }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("输入法切换统计")
-                    .font(.title2)
-                    .bold()
-                Spacer()
-                Button(role: .destructive) {
-                    showClearAlert = true
-                } label: {
-                    Label("清除统计数据", systemImage: "trash")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("输入法切换统计")
+                        .font(.title2)
+                        .bold()
+                    Spacer()
+                    Button(role: .destructive) {
+                        showClearAlert = true
+                    } label: {
+                        Label("清除统计数据", systemImage: "trash")
+                    }
+                    .help("清空所有输入法切换统计数据")
+                    .alert(isPresented: $showClearAlert) {
+                        Alert(
+                            title: Text("确认清除？"),
+                            message: Text("此操作将清空所有输入法切换统计数据，无法恢复。"),
+                            primaryButton: .destructive(Text("清除")) {
+                                recordManager.clearRecords()
+                            },
+                            secondaryButton: .cancel()
+                        )
+                    }
                 }
-                .help("清空所有输入法切换统计数据")
-                .alert(isPresented: $showClearAlert) {
-                    Alert(
-                        title: Text("确认清除？"),
-                        message: Text("此操作将清空所有输入法切换统计数据，无法恢复。"),
-                        primaryButton: .destructive(Text("清除")) {
-                            recordManager.clearRecords()
-                        },
-                        secondaryButton: .cancel()
-                    )
-                }
-            }
-            Divider()
+                Divider()
             if totalSwitches > 0 {
                 HStack(spacing: 32) {
                     VStack(alignment: .leading) {
@@ -94,14 +95,13 @@ struct StatisticsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                }                } else {
+                    Text("暂无统计数据")
+                        .foregroundColor(.secondary)
                 }
-            } else {
-                Text("暂无统计数据")
-                    .foregroundColor(.secondary)
             }
-            Spacer()
+            .padding()
         }
-        .padding()
     }
 }
 

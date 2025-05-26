@@ -2,6 +2,7 @@ import SwiftUI
 import InputMethodKit
 import UniformTypeIdentifiers
 import AppKit
+import Foundation
 
 struct ContentView: View {
     @ObservedObject var appState = AppState.shared
@@ -46,20 +47,23 @@ struct ContentView: View {
             .listStyle(.sidebar)
             .navigationTitle("设置")
         } detail: {
-            switch selectedSidebarItem {
-            case .rules:
-                rulesManagementView()
-            case .statistics:
-                StatisticsView()
-                    .environmentObject(appState)
-            case .logs:
-                SimpleLogsView()
-            case .general:
-                GeneralSettingsView()
-                    .environmentObject(appState)
-            case .about:
-                AboutUsView()
+            ZStack {
+                switch selectedSidebarItem {
+                case .rules:
+                    rulesManagementView()
+                case .statistics:
+                    StatisticsView()
+                        .environmentObject(appState)
+                case .logs:
+                    SimpleLogsView()
+                case .general:
+                    GeneralSettingsView()
+                        .environmentObject(appState)
+                case .about:
+                    AboutUsView()
+                }
             }
+            .frame(minHeight: defaultWindowHeight)
         }
         .onAppear {
             SimpleLogManager.shared.addLog("ContentView 界面加载完成", category: "App")
@@ -96,6 +100,8 @@ struct ContentView: View {
     private let viewPadding: CGFloat = 20
     private let sectionSpacing: CGFloat = 20
     private let contentSpacing: CGFloat = 16
+    // 默认窗口高度减小
+    private let defaultWindowHeight: CGFloat = 480
 
     // MARK: - Rules Management View
     @ViewBuilder
@@ -111,206 +117,10 @@ struct ContentView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                
                 // 当前规则列表
-                GroupBox {
-                    VStack(alignment: .leading, spacing: contentSpacing) {
-                        Label("当前规则", systemImage: "list.bullet.rectangle")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        if appState.appInputSourceMap.isEmpty {
-                            VStack(spacing: 12) {
-                                Image(systemName: "rectangle.stack.badge.plus")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.secondary)
-                                Text("暂无规则")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                Text("请添加应用规则来自动切换输入法")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                        } else {
-                            LazyVStack(spacing: 8) {
-                                ForEach(appState.appInputSourceMap.keys.sorted(), id: \.self) { appIdentifier in
-                                    RuleRowView(
-                                        appIdentifier: appIdentifier,
-                                        appInfo: appState.discoveredApplications.first(where: { $0.id == appIdentifier }),
-                                        inputSourceID: appState.appInputSourceMap[appIdentifier] ?? "",
-                                        availableInputSources: availableInputSources,
-                                        selectedDiscoveredAppID: $selectedDiscoveredAppID,
-                                        selectedInputSourceID: $selectedInputSourceID,
-                                        onDelete: { deleteRule(appIdentifier: $0) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    .padding(contentSpacing)
-                }
-                
-                // 添加/修改规则区
-                GroupBox {
-                    VStack(alignment: .leading, spacing: contentSpacing) {
-                        Label("添加规则", systemImage: "plus.app")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        VStack(spacing: contentSpacing) {
-                            HStack(alignment: .top, spacing: 20) {
-                                // 应用选择
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Label("应用", systemImage: "app")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                    
-                                    VStack(spacing: 8) {
-                                        // 显示所选应用
-                                        HStack(spacing: 8) {
-                                            // 应用信息显示区域
-                                            HStack(spacing: 12) {
-                                                if let selectedID = selectedDiscoveredAppID,
-                                                   let selectedApp = appState.discoveredApplications.first(where: { $0.id == selectedID }) {
-                                                    // 显示已选择的应用
-                                                    if let icon = selectedApp.icon {
-                                                        Image(nsImage: icon)
-                                                            .resizable()
-                                                            .frame(width: 32, height: 32)
-                                                    } else {
-                                                        Image(systemName: "app")
-                                                            .font(.title2)
-                                                            .frame(width: 32, height: 32)
-                                                    }
-                                                    
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text(selectedApp.name)
-                                                            .font(.body)
-                                                            .fontWeight(.medium)
-                                                        Text(selectedApp.id)
-                                                            .font(.caption)
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                    
-                                                    Spacer()
-                                                } else {
-                                                    // 未选择应用时的占位显示
-                                                    Image(systemName: "app.dashed")
-                                                        .font(.title2)
-                                                        .foregroundColor(.secondary)
-                                                        .frame(width: 32, height: 32)
-                                                    
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("未选择应用")
-                                                            .font(.body)
-                                                            .foregroundColor(.secondary)
-                                                        Text("请点击浏览按钮选择应用")
-                                                            .font(.caption)
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                    
-                                                    Spacer()
-                                                }
-                                            }
-                                            .padding(12)
-                                            .background(Color(NSColor.controlBackgroundColor))
-                                            .cornerRadius(8)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                                            )
-                                            .frame(minWidth: 250, minHeight: 56)
-                                            
-                                            // 浏览按钮
-                                            Button(action: showNativeAppPicker) {
-                                                Image(systemName: "folder.badge.plus")
-                                            }
-                                            .buttonStyle(.bordered)
-                                            .help("浏览文件夹选择应用")
-                                            
-                                            // 帮助按钮
-                                            Button(action: showBundleIDHelp) {
-                                                Image(systemName: "questionmark.circle")
-                                                    .font(.title3)
-                                            }
-                                            .buttonStyle(.borderless)
-                                            .help("如何获取 Bundle ID？")
-                                        }
-                                        
-                                        // 手动输入Bundle ID（备用方式）
-                                        DisclosureGroup("手动输入 Bundle ID") {
-                                            HStack(spacing: 8) {
-                                                TextField("com.example.app", text: Binding(
-                                                    get: { 
-                                                        // 如果当前选择的应用不在列表中，则显示Bundle ID
-                                                        if let selectedID = selectedDiscoveredAppID,
-                                                           !appState.discoveredApplications.contains(where: { $0.id == selectedID }) {
-                                                            return selectedID
-                                                        }
-                                                        return ""
-                                                    },
-                                                    set: { newValue in 
-                                                        if !newValue.isEmpty {
-                                                            selectedDiscoveredAppID = newValue
-                                                        }
-                                                    }
-                                                ))
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                                .frame(minWidth: 200)
-                                            }
-                                        }
-                                        .font(.caption)
-                                    }
-                                }
-                                
-                                // 输入法选择
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Label("输入法", systemImage: "keyboard")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                    
-                                    Picker("选择输入法", selection: $selectedInputSourceID) {
-                                        ForEach(availableInputSources, id: \.id) { inputSource in
-                                            Text(inputSource.localizedName).tag(inputSource.id)
-                                        }
-                                    }
-                                    .pickerStyle(.menu)
-                                    .frame(minWidth: 150)
-                                }
-                            }
-                            
-                            // 操作按钮
-                            HStack {
-                                Button("刷新应用列表") {
-                                    appState.discoverApplications()
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Spacer()
-                                
-                                if let appID = selectedDiscoveredAppID, appState.appInputSourceMap[appID] != nil {
-                                    Button("删除规则", role: .destructive) {
-                                        deleteSelectedRule()
-                                    }
-                                    .buttonStyle(.bordered)
-                                }
-                                
-                                Button(action: addOrUpdateRule) {
-                                    Label(
-                                        appState.appInputSourceMap[selectedDiscoveredAppID ?? ""] != nil ? "更新规则" : "添加规则",
-                                        systemImage: appState.appInputSourceMap[selectedDiscoveredAppID ?? ""] != nil ? "arrow.triangle.2.circlepath" : "plus"
-                                    )
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(selectedDiscoveredAppID == nil || selectedInputSourceID.isEmpty)
-                            }
-                        }
-                    }
-                    .padding(contentSpacing)
-                }
+                CurrentRulesListView(appState: appState, availableInputSources: availableInputSources, selectedDiscoveredAppID: $selectedDiscoveredAppID, selectedInputSourceID: $selectedInputSourceID, deleteRule: deleteRule)
+                // 添加/编辑规则
+                AddOrEditRuleView(appState: appState, availableInputSources: availableInputSources, selectedDiscoveredAppID: $selectedDiscoveredAppID, selectedInputSourceID: $selectedInputSourceID, addOrUpdateRule: addOrUpdateRule, deleteSelectedRule: deleteSelectedRule, showNativeAppPicker: showNativeAppPicker, showBundleIDHelp: showBundleIDHelp)
             }
             .padding(viewPadding)
         }
@@ -439,13 +249,39 @@ private struct RuleRowView: View {
     let onDelete: (String) -> Void
 
     var body: some View {
-        let appName = appInfo?.name ?? appIdentifier
+        let appName = appInfo?.name.isEmpty == false ? appInfo!.name : appIdentifier
+        
+        // 改进图标获取逻辑：优先使用应用实际图标，备用方案也尝试通过bundleID获取
+        let iconImage: NSImage? = {
+            // 1. 优先使用appInfo中的图标
+            if let icon = appInfo?.icon {
+                return icon
+            }
+            
+            // 2. 尝试通过应用路径获取图标
+            if let appPath = appInfo?.path {
+                return NSWorkspace.shared.icon(forFile: appPath.path)
+            }
+            
+            // 3. 尝试通过bundleID查找应用并获取图标
+            if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: appIdentifier) {
+                return NSWorkspace.shared.icon(forFile: appURL.path)
+            }
+            
+            // 4. 最后的备用方案：通用应用图标
+            if #available(macOS 12.0, *) {
+                return NSWorkspace.shared.icon(for: .application)
+            } else {
+                return NSWorkspace.shared.icon(forFileType: "app")
+            }
+        }()
+        
         let inputSourceName = availableInputSources.first(where: { $0.id == inputSourceID })?.localizedName ?? inputSourceID
         
         HStack(spacing: 12) {
             // App icon and info
             HStack(spacing: 8) {
-                if let info = appInfo, let nsIcon = info.icon {
+                if let nsIcon = iconImage {
                     Image(nsImage: nsIcon)
                         .resizable()
                         .frame(width: 24, height: 24)
@@ -460,10 +296,6 @@ private struct RuleRowView: View {
                     Text(appName)
                         .font(.body)
                         .fontWeight(.medium)
-                    Text(appIdentifier)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
                 }
             }
             
@@ -513,6 +345,197 @@ private struct RuleRowView: View {
             } else {
                 selectedInputSourceID = ""
             }
+        }
+    }
+}
+
+// MARK: - 当前规则列表子视图
+private struct CurrentRulesListView: View {
+    @ObservedObject var appState: AppState
+    let availableInputSources: [InputSourceInfo]
+    @Binding var selectedDiscoveredAppID: String?
+    @Binding var selectedInputSourceID: String
+    let deleteRule: (String) -> Void
+    var body: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 16) {
+                Label("当前规则", systemImage: "list.bullet.rectangle")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                if appState.appInputSourceMap.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "rectangle.stack.badge.plus")
+                            .font(.largeTitle)
+                            .foregroundColor(.secondary)
+                        Text("暂无规则")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Text("请添加应用规则来自动切换输入法")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    LazyVStack(spacing: 8) {
+                        ForEach(appState.appInputSourceMap.keys.sorted(), id: \.self) { appIdentifier in
+                            RuleRowView(
+                                appIdentifier: appIdentifier,
+                                appInfo: appState.discoveredApplications.first(where: { $0.id == appIdentifier }),
+                                inputSourceID: appState.appInputSourceMap[appIdentifier] ?? "",
+                                availableInputSources: availableInputSources,
+                                selectedDiscoveredAppID: $selectedDiscoveredAppID,
+                                selectedInputSourceID: $selectedInputSourceID,
+                                onDelete: { deleteRule($0) }
+                            )
+                        }
+                    }
+                }
+            }
+            .padding(16)
+        }
+    }
+}
+
+// MARK: - 添加/编辑规则子视图
+private struct AddOrEditRuleView: View {
+    @ObservedObject var appState: AppState
+    let availableInputSources: [InputSourceInfo]
+    @Binding var selectedDiscoveredAppID: String?
+    @Binding var selectedInputSourceID: String
+    let addOrUpdateRule: () -> Void
+    let deleteSelectedRule: () -> Void
+    let showNativeAppPicker: () -> Void
+    let showBundleIDHelp: () -> Void
+    var body: some View {
+        GroupBox {
+            VStack(alignment: .leading, spacing: 16) {
+                Label("添加规则", systemImage: "plus.app")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                VStack(spacing: 16) {
+                    HStack(alignment: .top, spacing: 20) {
+                        // 应用选择
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("应用", systemImage: "app")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            VStack(spacing: 8) {
+                                // 显示所选应用
+                                HStack(spacing: 8) {
+                                    // 应用信息显示区域
+                                    HStack(spacing: 12) {
+                                        if let selectedID = selectedDiscoveredAppID,
+                                           let selectedApp = appState.discoveredApplications.first(where: { $0.id == selectedID }) {
+                                            // 显示已选择的应用
+                                            // 改进图标获取逻辑
+                                            let appIcon: NSImage? = {
+                                                // 1. 优先使用selectedApp中的图标
+                                                if let icon = selectedApp.icon {
+                                                    return icon
+                                                }
+                                                
+                                                // 2. 尝试通过bundleID查找应用并获取图标
+                                                if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: selectedID) {
+                                                    return NSWorkspace.shared.icon(forFile: appURL.path)
+                                                }
+                                                
+                                                // 3. 尝试通过应用路径获取图标
+                                                return NSWorkspace.shared.icon(forFile: selectedApp.path.path)
+                                            }()
+                                            
+                                            if let icon = appIcon {
+                                                Image(nsImage: icon)
+                                                    .resizable()
+                                                    .frame(width: 32, height: 32)
+                                            } else {
+                                                Image(systemName: "app")
+                                                    .font(.title2)
+                                                    .frame(width: 32, height: 32)
+                                            }
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(selectedApp.name)
+                                                    .font(.body)
+                                                    .fontWeight(.medium)
+                                            }
+                                            Spacer()
+                                        } else {
+                                            // 未选择应用时的占位显示
+                                            Image(systemName: "app.dashed")
+                                                .font(.title2)
+                                                .foregroundColor(.secondary)
+                                                .frame(width: 32, height: 32)
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("未选择应用")
+                                                    .font(.body)
+                                                    .foregroundColor(.secondary)
+                                                Text("请点击浏览按钮选择应用")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                        }
+                                    }
+                                    .padding(12)
+                                    .background(Color(NSColor.controlBackgroundColor))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                    )
+                                    .frame(minWidth: 250, minHeight: 56)
+                                    
+                                    // 浏览按钮
+                                    Button(action: showNativeAppPicker) {
+                                        Image(systemName: "folder.badge.plus")
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .help("浏览文件夹选择应用")
+                                    
+                                    // 帮助按钮
+                                    Button(action: showBundleIDHelp) {
+                                        Image(systemName: "questionmark.circle")
+                                            .font(.title3)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help("如何获取 Bundle ID？")
+                                }
+                            }
+                        }
+                        // 输入法选择
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("输入法", systemImage: "keyboard")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Picker("选择输入法", selection: $selectedInputSourceID) {
+                                ForEach(availableInputSources, id: \.id) { inputSource in
+                                    Text(inputSource.localizedName).tag(inputSource.id)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .frame(minWidth: 150)
+                        }
+                    }
+                    
+                    // 操作按钮
+                    HStack {
+                        Spacer()
+                        if let appID = selectedDiscoveredAppID, appState.appInputSourceMap[appID] != nil {
+                            Button("删除规则", role: .destructive) {
+                                deleteSelectedRule()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Button(action: addOrUpdateRule) {
+                            Text("保存")
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+            .padding(16)
         }
     }
 }
