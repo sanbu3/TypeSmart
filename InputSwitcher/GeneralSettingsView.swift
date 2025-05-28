@@ -10,64 +10,69 @@ struct GeneralSettingsView: View {
     @State private var moveInProgress = false
     @State private var moveError: String? = nil
 
+    @ViewBuilder
+    private var applicationsFolderWarningView: some View {
+        if !isInApplicationsFolder() {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text("The application is not in the Applications folder.")
+                }
+                Text("为保证权限和自动启动等功能正常，建议将本应用移动到 /Applications 文件夹。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                if let moveError = moveError {
+                    Text("移动失败：\(moveError)")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                HStack {
+                    Button(action: moveToApplicationsFolder) {
+                        if moveInProgress {
+                            ProgressView()
+                        } else {
+                            Label("一键移动到应用程序文件夹", systemImage: "arrow.right.square")
+                        }
+                    }
+                    .disabled(moveInProgress)
+                    .buttonStyle(.borderedProminent)
+                    Button(action: showManualMoveHelp) {
+                        Label("手动操作说明", systemImage: "questionmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+        }
+    }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
             VStack(spacing: 20) {
-                // 检查是否在/Applications目录
-                if !isInApplicationsFolder() {
-                    GroupBox {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.orange)
-                                Text("建议将 TypeSmart 移动到“应用程序”文件夹")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                            }
-                            Text("为保证权限和自动启动等功能正常，建议将本应用移动到 /Applications 文件夹。")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            if let moveError = moveError {
-                                Text("移动失败：\(moveError)")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-                            HStack {
-                                Button(action: moveToApplicationsFolder) {
-                                    if moveInProgress {
-                                        ProgressView()
-                                    } else {
-                                        Label("一键移动到应用程序文件夹", systemImage: "arrow.right.square")
-                                    }
-                                }
-                                .disabled(moveInProgress)
-                                .buttonStyle(.borderedProminent)
-                                Button(action: showManualMoveHelp) {
-                                    Label("手动操作说明", systemImage: "questionmark.circle")
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-                        .padding(8)
-                    }
-                }
-
-                // 状态栏配置
+                applicationsFolderWarningView // Replaces the original 'if !isInApplicationsFolder()' block
+                
+                // 功能配置
                 GroupBox {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Label("状态栏配置", systemImage: "menubar.rectangle")
+                            Label("功能配置", systemImage: "gearshape.2")
                                 .font(.headline)
                             Spacer()
                         }
                         
+                        // 拆分复杂表达式
+                        let autoSwitchStatusText = appState.autoSwitchEnabled ? "已启用" : "已暂停"
+                        let autoSwitchStatusColor = appState.autoSwitchEnabled ? Color.green : Color.orange
+
                         Toggle(isOn: $appState.autoSwitchEnabled) {
                             HStack {
                                 Label("自动切换输入法", systemImage: "keyboard.fill")
                                 Spacer()
-                                Text(appState.autoSwitchEnabled ? "已启用" : "已暂停")
+                                Text(autoSwitchStatusText)
                                     .font(.caption)
-                                    .foregroundColor(appState.autoSwitchEnabled ? .green : .orange)
+                                    .foregroundColor(autoSwitchStatusColor)
                                     .fontWeight(.medium)
                             }
                         }
@@ -75,17 +80,69 @@ struct GeneralSettingsView: View {
                         
                         Divider()
                         
+                        let dockIconStatusText = appState.hideDockIcon ? "已隐藏" : "已显示"
+                        let dockIconStatusColor = appState.hideDockIcon ? Color.secondary : Color.blue
+
                         Toggle(isOn: $appState.hideDockIcon) {
                             HStack {
                                 Label("隐藏 Dock 图标", systemImage: "dock.rectangle")
                                 Spacer()
-                                Text(appState.hideDockIcon ? "已隐藏" : "已显示")
+                                Text(dockIconStatusText)
                                     .font(.caption)
-                                    .foregroundColor(appState.hideDockIcon ? .secondary : .blue)
+                                    .foregroundColor(dockIconStatusColor)
                                     .fontWeight(.medium)
                             }
                         }
-                        .help("隐藏后，TypeSmart 仅在状态栏显示图标")
+                        .help("隐藏后可减少视觉干扰，应用仍可通过托盘菜单访问")
+                        
+                        Divider()
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Toggle(isOn: $appState.audioFeedbackEnabled) {
+                                HStack {
+                                    Label("输入法切换音效", systemImage: "speaker.wave.2.fill")
+                                    Spacer()
+                                    Text(appState.audioFeedbackEnabled ? "已启用" : "已关闭")
+                                        .font(.caption)
+                                        .foregroundColor(appState.audioFeedbackEnabled ? .green : .secondary)
+                                        .fontWeight(.medium)
+                                }
+                            }
+                        }
+                        .help("切换输入法时播放声音反馈")
+                        
+                        Divider()
+                        
+                        // 添加通知控制选项
+                        Toggle(isOn: $appState.switchNotificationsEnabled) {
+                            HStack {
+                                Label("输入法切换通知", systemImage: "bell.badge")
+                                Spacer()
+                                Text(appState.switchNotificationsEnabled ? "已启用" : "已关闭")
+                                    .font(.caption)
+                                    .foregroundColor(appState.switchNotificationsEnabled ? .green : .secondary)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        .help("开启后会在切换输入法时显示系统通知，关闭可减少干扰")
+                        
+                        Divider()
+                        
+                        // 托盘设置开关
+                        let trayStatusText = TrayState.shared.isTrayEnabled ? "已启用" : "已禁用"
+                        let trayStatusColor = TrayState.shared.isTrayEnabled ? Color.green : Color.secondary
+
+                        Toggle(isOn: TrayState.shared.trayEnabledBinding) {
+                            HStack {
+                                Label("显示菜单栏图标", systemImage: "menubar.rectangle")
+                                Spacer()
+                                Text(trayStatusText)
+                                    .font(.caption)
+                                    .foregroundColor(trayStatusColor)
+                                    .fontWeight(.medium)
+                            }
+                        }
+                        .help("在系统菜单栏中显示 TypeSmart 图标")
                     }
                     .padding()
                 }

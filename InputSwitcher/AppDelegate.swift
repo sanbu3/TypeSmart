@@ -1,58 +1,158 @@
-import AppKit
 import Foundation
+import AppKit
 import InputMethodKit
 import SwiftUI
 import ServiceManagement
 import ApplicationServices
+import os.log
+import Combine
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor
+@objcMembers class AppDelegate: NSObject, NSApplicationDelegate {
+    private let appState = AppState.shared
+    private let audioManager = AudioManager.shared
+    private let switchRecordManager = SwitchRecordManager.shared
+    private let simpleLogManager = SimpleLogManager.shared
+    private let inputSourceManager = InputSourceManager.shared
+    private let trayManager = TrayManager.shared
+    
     var timer: Timer?
-    static var statusItem: NSStatusItem?
     
     // 防止递归切换的标志
     private var isInternalInputSourceChange = false
+    private let logger = Logger(subsystem: "online.wangww.TypeSmart", category: "AppDelegate")
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        print("Application did finish launching.")
+        logger.info("Application did finish launching")
+        
+        // 修复 GenerativeModelsAvailability 语言代码错误
+        setupLanguageEnvironment()
+        
+        // 检查音效文件是否存在
+        let successSound = AppState.shared.successAudioName
+        let failureSound = AppState.shared.failureAudioName
+        if NSSound(named: successSound) == nil {
+            logger.error("[AppDelegate] 成功音效 \(successSound) 未找到")
+        }
+        if NSSound(named: failureSound) == nil {
+            logger.error("[AppDelegate] 失败音效 \(failureSound) 未找到")
+        }
+        
+        // Configure InputSourceManager
+        setupInputSourceManager()
         
         // Auto-check permissions if enabled
-        if AppState.shared.autoCheckPermissions {
+        if appState.autoCheckPermissions {
             DispatchQueue.main.async {
                 NSApp.activate(ignoringOtherApps: true)
                 let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
                 let _ = AXIsProcessTrustedWithOptions(options)
-                // 日志可选
             }
         }
         
         // Apply dock icon visibility setting
-        AppState.shared.updateDockIconVisibility()
-        
-        AppState.shared.discoverApplications()
+        appState.updateDockIconVisibility()
+        appState.discoverApplications()
         
         // 恢复丢失的应用信息（名称、路径等）
-        AppState.shared.recoverMissingApplicationInfo()
+        appState.recoverMissingApplicationInfo()
         
         // 增强规则中的应用信息，确保所有规则都有完整的AppInfo
-        AppState.shared.enhanceRuleApplicationInfo()
+        appState.enhanceRuleApplicationInfo()
         
-        setupStatusItem()
+        // 初始化托盘系统
+        setupTraySystem()
+        
         startTimer()
         
         // 立即检查当前活动应用
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.checkActiveApplication()
         }
+        
+        // 在应用启动时确保设置界面加载侧边栏
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.ensureSettingsSidebarLoaded()
+        }
+    }
+
+    private func setupInputSourceManager() {
+        inputSourceManager.configure(
+            playSuccessSound: { [weak self] in
+                self?.audioManager.playSuccessSound()
+            },
+            playFailureSound: { [weak self] in
+                self?.audioManager.playFailureSound()
+            },
+            recordSwitch: { [weak self] sourceID, sourceName, bundleID, appName, success in
+                self?.switchRecordManager.recordSwitch(
+                    sourceID: sourceID,
+                    sourceName: sourceName,
+                    bundleID: bundleID,
+                    appName: appName,
+                    success: success
+                )
+            },
+            logMessage: { [weak self] message, category in
+                // self?.simpleLogManager.log(message, category: category)
+                DispatchQueue.main.async {
+                    self?.simpleLogManager.log(message, category: category)
+                }
+            },
+            isAudioFeedbackEnabled: { [weak self] in
+                self?.appState.audioFeedbackEnabled ?? false
+            }
+        )
+        logger.info("InputSourceManager configured successfully")
+    }
+
+    private func setupTraySystem() {
+        // 同步托盘状态
+        let trayState = TrayState.shared
+        trayManager.isEnabled = trayState.isTrayEnabled
+        
+        // 初始化托盘管理器
+        trayManager.initialize()
+        
+        // 设置托盘状态监听
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(trayStateChanged),
+            name: .trayStateChanged,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(trayIconStyleChanged),
+            name: .trayIconStyleChanged,
+            object: nil
+        )
+        
+        logger.info("Tray system configured successfully - enabled: \(trayState.isTrayEnabled)")
+    }
+    
+    @objc private func trayStateChanged() {
+        let trayState = TrayState.shared
+        trayManager.isEnabled = trayState.isTrayEnabled
+        logger.info("Tray state changed: \(trayState.isTrayEnabled)")
+    }
+    
+    @objc private func trayIconStyleChanged() {
+        trayManager.updateTrayIcon()
+        logger.info("Tray icon style changed")
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         timer?.invalidate()
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         DistributedNotificationCenter.default().removeObserver(self)
-        if let item = AppDelegate.statusItem {
-            NSStatusBar.system.removeStatusItem(item)
-            AppDelegate.statusItem = nil
-        }
+        
+        // 清理托盘系统
+        trayManager.isEnabled = false
+        NotificationCenter.default.removeObserver(self)
+        
+        logger.info("Application terminating, all resources cleaned up")
     }
     
     func startTimer() {
@@ -85,32 +185,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func activeAppDidChange(notification: NSNotification) {
-        guard let newApp = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-              let bundleID = newApp.bundleIdentifier else {
+        // 忽略如果自动切换被禁用
+        guard appState.autoSwitchEnabled else {
+            print("[AppDelegate] 自动切换已禁用，忽略应用切换事件")
             return
         }
-        handleAppSwitch(to: bundleID)
-        AppState.shared.lastActiveAppIdentifier = bundleID
+
+        guard let newApp = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+              let bundleID = newApp.bundleIdentifier else {
+            print("[AppDelegate] 无法获取切换应用的信息")
+            return
+        }
+
+        // 防止过于频繁的切换处理
+        handleAppSwitchDebounced(to: bundleID)
     }
+
+    private var pendingAppSwitchTimer: Timer?
+    private let appSwitchDebounceInterval: TimeInterval = 0.3 // 300ms防抖
     
+    @MainActor
+    private func handleAppSwitchDebounced(to bundleID: String) {
+        pendingAppSwitchTimer?.invalidate()
+        pendingAppSwitchTimer = Timer.scheduledTimer(withTimeInterval: appSwitchDebounceInterval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleAppSwitch(to: bundleID)
+            }
+        }
+    }
+
     @objc func inputSourceDidChange() {
         // 如果是程序内部的输入法切换，则忽略这个通知
         if isInternalInputSourceChange {
             print("[AppDelegate] 忽略程序内部的输入法变化通知")
             return
         }
-        
-        print("[AppDelegate] 外部输入法发生变化")
-        // ⚠️ 不再自动将前台应用添加到规则，避免规则污染
-        // 只允许用户在 UI 中手动添加/更新规则
-        // 如果需要“记忆”功能，可在设置中提供选项，由用户决定是否启用
-        // if let activeApp = NSWorkspace.shared.frontmostApplication,
-        //    let bundleID = activeApp.bundleIdentifier,
-        //    let currentInputSourceID = InputSourceManager.shared.getCurrentInputSourceID() {
-        //     AppState.shared.appInputSourceMap[bundleID] = currentInputSourceID
-        //     SimpleLogManager.shared.addLog("检测到用户手动切换输入法，已将 \(bundleID) 的规则更新为 \(currentInputSourceID)", category: "InputSource")
-        //     print("[AppDelegate] 规则已更新: \(bundleID) -> \(currentInputSourceID)")
-        // }
+
+        guard let currentInputSourceID = InputSourceManager.shared.getCurrentInputSourceID() else {
+            print("[AppDelegate] 外部输入法发生变化，但无法获取当前输入法ID")
+            return
+        }
+
+        print("[AppDelegate] 外部输入法发生变化，当前输入法ID: \(currentInputSourceID)")
     }
 
     @objc func checkActiveApplication() {
@@ -119,12 +235,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         
-        if bundleID != AppState.shared.lastActiveAppIdentifier {
+        if bundleID != appState.lastActiveAppIdentifier {
             handleAppSwitch(to: bundleID)
-            AppState.shared.lastActiveAppIdentifier = bundleID
+            appState.lastActiveAppIdentifier = bundleID
         }
     }
 
+    @MainActor
     func handleAppSwitch(to appIdentifier: String) {
         print("[AppDelegate] handleAppSwitch: 应用切换到 \(appIdentifier)")
         
@@ -135,13 +252,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // 只对有规则的应用进行处理
-        guard let targetInputSourceID = AppState.shared.appInputSourceMap[appIdentifier] else {
+        guard let targetInputSourceID = appState.appInputSourceMap[appIdentifier] else {
             print("[AppDelegate] handleAppSwitch: 当前应用无规则，不处理输入法切换。BundleID=\(appIdentifier)")
             return
         }
         
         // 获取当前输入法
-        let currentInputSourceID = InputSourceManager.shared.getCurrentInputSourceID() ?? "(unknown)"
+        guard let currentInputSourceID = InputSourceManager.shared.getCurrentInputSourceID() else {
+            print("[AppDelegate] handleAppSwitch: 无法获取当前输入法ID")
+            return
+        }
         print("[AppDelegate] handleAppSwitch: 规则要求输入法=\(targetInputSourceID)，当前输入法=\(currentInputSourceID)")
         
         if currentInputSourceID == targetInputSourceID {
@@ -151,18 +271,43 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 切换输入法
         print("[AppDelegate] handleAppSwitch: 输入法不符，准备切换。from=\(currentInputSourceID) to=\(targetInputSourceID)")
-        SimpleLogManager.shared.addLog("应用 \(appIdentifier) 激活，规则要求输入法 \(targetInputSourceID)，当前为 \(currentInputSourceID)，执行切换。", category: "InputSwitch")
+        // SimpleLogManager.shared.addLog("应用 \(appIdentifier) 激活，规则要求输入法 \(targetInputSourceID)，当前为 \(currentInputSourceID)，执行切换。", category: "InputSwitch")
+        DispatchQueue.main.async {
+            SimpleLogManager.shared.addLog("应用 \(appIdentifier) 激活，规则要求输入法 \(targetInputSourceID)，当前为 \(currentInputSourceID)，执行切换。", category: "InputSwitch")
+        }
+        
         isInternalInputSourceChange = true
-        let fromAppID = AppState.shared.lastActiveAppIdentifier ?? "unknown"
+        let fromAppID = appState.lastActiveAppIdentifier ?? "unknown"
         InputSourceManager.shared.switchInputSource(
             to: targetInputSourceID,
             fromAppID: fromAppID,
             toAppID: appIdentifier
         )
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.isInternalInputSourceChange = false
+        
+        // 延迟重置内部切换标志
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.isInternalInputSourceChange = false
         }
+        
+        // 更新最后激活的应用ID
+        appState.lastActiveAppIdentifier = appIdentifier
         print("[AppDelegate] handleAppSwitch: 输入法切换已触发。")
+        
+        // 更新托盘菜单和图标
+        trayManager.updateTrayMenu()
+        
+        // 显示托盘通知（如果用户启用了通知功能）
+        if appState.switchNotificationsEnabled {
+            let appInfo = appState.discoveredApplications.first { $0.id == appIdentifier }
+            let appName = appInfo?.name ?? appIdentifier
+            let inputSourceInfo = InputSourceManager.shared.getInputSources().first { $0.id == targetInputSourceID }
+            let inputSourceName = inputSourceInfo?.localizedName ?? targetInputSourceID
+            
+            trayManager.showNotification(
+                title: "输入法已切换",
+                message: "\(appName) → \(inputSourceName)"
+            )
+        }
     }
 
     func checkAccessibilityPermissions() {
@@ -176,137 +321,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func setupStatusItem() {
-        // 创建新的状态栏项目，使用 Apple 系统图标
-        if AppDelegate.statusItem == nil {
-            AppDelegate.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        }
+    // MARK: - Language Environment Setup
+    
+    /// 设置正确的语言环境以避免 GenerativeModelsAvailability 错误
+    private func setupLanguageEnvironment() {
+        // 使用 LocaleManager 获取规范化的语言代码
+        let normalizedLanguage = LocaleManager.shared.currentLanguage()
+        print("[AppDelegate] 设置语言环境: \(normalizedLanguage)")
         
-        // 配置状态栏按钮，使用 Apple 内置系统图标
-        if let button = AppDelegate.statusItem?.button {
-            // 使用 Apple 内置的键盘图标
-            if #available(macOS 11.0, *) {
-                // 优先使用 SF Symbols 中的键盘图标
-                if let keyboardIcon = NSImage(systemSymbolName: "keyboard.fill", accessibilityDescription: "TypeSmart 输入法切换器") {
-                    button.image = keyboardIcon
-                    // 设置图标颜色为系统默认颜色
-                    button.image?.isTemplate = true
-                } else {
-                    // 备选：使用字符图标
-                    button.image = NSImage(systemSymbolName: "command", accessibilityDescription: "TypeSmart")
-                }
-            } else {
-                // macOS 10.15 及以下版本的兼容性处理
-                if let genericIcon = NSImage(named: NSImage.applicationIconName) {
-                    button.image = genericIcon
-                } else {
-                    // 最终备选：创建一个简单的文本图标
-                    let image = NSImage(size: NSSize(width: 16, height: 16))
-                    image.lockFocus()
-                    "⌨️".draw(at: NSPoint(x: 0, y: 0), withAttributes: [
-                        .font: NSFont.systemFont(ofSize: 12)
-                    ])
-                    image.unlockFocus()
-                    button.image = image
-                }
-                button.image?.isTemplate = true
-            }
-            
-            button.action = #selector(statusItemClicked)
-            button.target = self
-        }
+        // 设置多个环境变量
+        setenv("LANG", "\(normalizedLanguage).UTF-8", 1)
+        setenv("LC_ALL", "\(normalizedLanguage).UTF-8", 1)
+        setenv("LC_MESSAGES", "\(normalizedLanguage).UTF-8", 1)
+        setenv("LC_CTYPE", "\(normalizedLanguage).UTF-8", 1)
+        setenv("LANGUAGE", normalizedLanguage, 1)
         
-        // 创建改进的右键菜单
-        let menu = NSMenu()
+        // 强制设置 UserDefaults
+        UserDefaults.standard.set([normalizedLanguage], forKey: "AppleLanguages")
+        UserDefaults.standard.synchronize()
         
-        // 添加应用名称作为标题（不可点击）
-        let titleItem = NSMenuItem(title: "TypeSmart", action: nil, keyEquivalent: "")
-        titleItem.isEnabled = false
-        menu.addItem(titleItem)
+        // 使用 CFPreferences 进行全局设置
+        CFPreferencesSetValue("AppleLanguages" as CFString, 
+                            [normalizedLanguage] as CFArray, 
+                            kCFPreferencesAnyApplication, 
+                            kCFPreferencesCurrentUser, 
+                            kCFPreferencesAnyHost)
+        CFPreferencesSynchronize(kCFPreferencesAnyApplication, 
+                               kCFPreferencesCurrentUser, 
+                               kCFPreferencesAnyHost)
         
-        menu.addItem(NSMenuItem.separator())
+        // 通知系统语言变化
+        NotificationCenter.default.post(name: NSLocale.currentLocaleDidChangeNotification, object: nil)
         
-        // 主要功能菜单项
-        let settingsItem = NSMenuItem(title: "偏好设置...", action: #selector(openSettingsWindow), keyEquivalent: ",")
-        settingsItem.target = self
-        menu.addItem(settingsItem)
-        
-        // 快速操作
-        menu.addItem(NSMenuItem.separator())
-        
-        let quickToggleItem = NSMenuItem(title: "暂停自动切换", action: #selector(toggleAutoSwitch), keyEquivalent: "")
-        quickToggleItem.target = self
-        menu.addItem(quickToggleItem)
-        
-        // 关于和退出
-        menu.addItem(NSMenuItem.separator())
-        let aboutItem = NSMenuItem(title: "关于 TypeSmart", action: #selector(showAbout), keyEquivalent: "")
-        aboutItem.target = self
-        menu.addItem(aboutItem)
-        
-        let quitItem = NSMenuItem(title: "退出 TypeSmart", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        quitItem.target = NSApp
-        menu.addItem(quitItem)
-        
-        AppDelegate.statusItem?.menu = menu
-        print("✅ 新的状态栏图标设置完成，使用 Apple 内置键盘图标")
+        logger.info("Language environment setup complete: \(normalizedLanguage)")
     }
 
-    @objc func statusItemClicked() {
-        openSettingsWindow()
-    }
-
-    @objc func openSettingsWindow() {
-        // Try to activate the app to ensure it can display UI
-        NSApp.activate(ignoringOtherApps: true)
-        
-        // Proper approach - use Settings item from main menu to avoid "Please use SettingsLink" warning
-        if let settingsCommand = NSApp.mainMenu?.items
-            .first(where: { $0.title == "TypeSmart" })?
-            .submenu?.items
-            .first(where: { $0.title.contains("设置") || $0.title.contains("Settings") || $0.title.contains("Preferences") }) {
-            if let action = settingsCommand.action {
-                NSApp.sendAction(action, to: settingsCommand.target, from: settingsCommand)
+    // 确保设置界面加载侧边栏
+    private func ensureSettingsSidebarLoaded() {
+        DispatchQueue.main.async {
+            if let settingsWindow = NSApp.windows.first(where: { $0.title.contains("设置") || $0.title.contains("TypeSmart") }) {
+                if let contentView = settingsWindow.contentView as? NSHostingView<RootSettingsView> {
+                    contentView.rootView.loadSidebar()
+                    print("[AppDelegate] 确保设置界面加载了侧边栏")
+                }
             }
-            return
         }
-        
-        // Fallback: Try standard settings API - now deprecated but still functional
-        if #available(macOS 13.0, *) {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        } else {
-            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-        }
-    }
-    
-    @objc func requestAccessibilityPermissions() {
-        checkAccessibilityPermissions()
-    }
-    
-    // MARK: - 新的托盘菜单功能
-    
-    @objc func toggleAutoSwitch() {
-        // 实现暂停/恢复自动切换功能
-        AppState.shared.autoSwitchEnabled.toggle()
-        
-        // 更新菜单项文本
-        if let menu = AppDelegate.statusItem?.menu,
-           let toggleItem = menu.items.first(where: { $0.action == #selector(toggleAutoSwitch) }) {
-            toggleItem.title = AppState.shared.autoSwitchEnabled ? "暂停自动切换" : "恢复自动切换"
-        }
-        
-        let status = AppState.shared.autoSwitchEnabled ? "已恢复" : "已暂停"
-        print("🔄 自动切换功能\(status)")
-        SimpleLogManager.shared.addLog("自动切换功能\(status)", category: "StatusBar")
-    }
-    
-    @objc func showAbout() {
-        // 打开设置窗口并导航到关于页面
-        NSApp.activate(ignoringOtherApps: true)
-        
-        // Use our direct method to open settings without warnings
-        openSettingsWindow()
-        
-        SimpleLogManager.shared.addLog("从状态栏打开关于页面", category: "StatusBar")
     }
 }

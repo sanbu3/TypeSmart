@@ -10,23 +10,9 @@
 		21A88F2D2DE185FA0018465F /* TypeSmart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TypeSmart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		215715712DE20809009DAC60 /* Exceptions for "InputSwitcher" folder in "InputSwitcher" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-				LogManager.swift,
-			);
-			target = 21A88F2C2DE185FA0018465F /* InputSwitcher */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		21A88F2F2DE185FA0018465F /* InputSwitcher */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				215715712DE20809009DAC60 /* Exceptions for "InputSwitcher" folder in "InputSwitcher" target */,
-			);
 			path = InputSwitcher;
 			sourceTree = "<group>";
 		};
@@ -268,7 +254,7 @@
 				CODE_SIGN_ENTITLEMENTS = InputSwitcher/InputSwitcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20250528;
 				DEVELOPMENT_TEAM = 5R8B53HUKT;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -281,7 +267,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = online.wangww.InputSwitcher;
 				PRODUCT_NAME = TypeSmart;
 				REGISTER_APP_GROUPS = YES;
@@ -299,7 +285,7 @@
 				CODE_SIGN_ENTITLEMENTS = InputSwitcher/InputSwitcher.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 20250528;
 				DEVELOPMENT_TEAM = 5R8B53HUKT;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -312,7 +298,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = online.wangww.InputSwitcher;
 				PRODUCT_NAME = TypeSmart;
 				REGISTER_APP_GROUPS = YES;
