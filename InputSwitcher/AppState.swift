@@ -4,9 +4,10 @@ import ServiceManagement // For SMAppService
 import Cocoa // For NSWorkspace, NSImage
 import ApplicationServices // For AXIsProcessTrusted
 import os.log
+import Combine
+import AudioToolbox // 添加缺少的框架导入
 
-// Ensure this file is included in the InputSwitcher target in Xcode.
-// If not, add SimpleLogManager.swift to the target membership.
+// Access managers directly without module imports
 
 // AppInfo struct: Defines the structure for holding application details.
 // It's Identifiable for use in SwiftUI Lists/Pickers.
@@ -49,7 +50,7 @@ public struct AppInfo: Identifiable, Hashable, Equatable, Codable {
 
 // AppState class: Manages the application's shared state.
 // ObservableObject for SwiftUI to observe changes.
-public class AppState: ObservableObject {
+public final class AppState: ObservableObject {
     public static let shared = AppState() // Singleton instance
 
     // Maps Bundle Identifier (String) to Input Source ID (String)
@@ -60,7 +61,10 @@ public class AppState: ObservableObject {
                 return
             }
             // print("[AppState] appInputSourceMap.didSet: Value changed. Saving rules.")
-            SimpleLogManager.shared.addLog("应用输入源映射发生变化，现有 \\(appInputSourceMap.count) 个规则", category: "AppState")
+            // 使用普通日志记录代替 SimpleLogManager
+            DispatchQueue.main.async {
+                print("[AppState] 应用输入源映射发生变化，现有 \\(self.appInputSourceMap.count) 个规则")
+            }
             saveRules()
         }
     }
@@ -101,6 +105,8 @@ public class AppState: ObservableObject {
         didSet {
             if oldValue == hideDockIcon { return }
             UserDefaults.standard.set(hideDockIcon, forKey: hideDockIconKey)
+            print("[AppState] hideDockIcon toggled: \(hideDockIcon)")
+            // 自动更新 Dock 图标可见性
             updateDockIconVisibility()
         }
     }
@@ -122,6 +128,56 @@ public class AppState: ObservableObject {
             UserDefaults.standard.set(autoSwitchEnabled, forKey: autoSwitchEnabledKey)
         }
     }
+    
+    // 控制音频反馈功能
+    @Published public var audioFeedbackEnabled: Bool {
+        didSet {
+            if oldValue == audioFeedbackEnabled { return }
+            UserDefaults.standard.set(audioFeedbackEnabled, forKey: audioFeedbackEnabledKey)
+        }
+    }
+    
+    // 音频音量控制，添加错误处理
+    @Published public var audioVolume: Float {
+        didSet {
+            if oldValue == audioVolume { return }
+            // 确保音量值在有效范围内
+            let clampedVolume = max(0.0, min(1.0, audioVolume))
+            if clampedVolume != audioVolume {
+                audioVolume = clampedVolume
+            }
+            UserDefaults.standard.set(clampedVolume, forKey: audioVolumeKey)
+        }
+    }
+    
+    // 初始化存储属性时直接从 UserDefaults 获取值
+    @Published public var successAudioName: String = UserDefaults.standard.string(forKey: "successAudioName") ?? "Frog" {
+        didSet {
+            if oldValue != successAudioName {
+                UserDefaults.standard.set(successAudioName, forKey: "successAudioName")
+            }
+        }
+    }
+    
+    @Published public var failureAudioName: String = UserDefaults.standard.string(forKey: "failureAudioName") ?? "Purr" {
+        didSet {
+            if oldValue != failureAudioName {
+                UserDefaults.standard.set(failureAudioName, forKey: "failureAudioName")
+            }
+        }
+    }
+    
+    // 控制输入法切换通知功能
+    @Published public var switchNotificationsEnabled: Bool {
+        didSet {
+            if oldValue == switchNotificationsEnabled { return }
+            UserDefaults.standard.set(switchNotificationsEnabled, forKey: switchNotificationsEnabledKey)
+        }
+    }
+
+    public var availableAudioNames: [String] {
+        return ["Frog", "Purr", "Jump", "Tink", "Pop", "Blow", "Basso", "Glass", "Ping", "Bottle"]
+    }
 
     private let userDefaultsKey = "appInputSourceMap"
     private let launchAtLoginKey = "launchAtLoginEnabled"
@@ -129,6 +185,9 @@ public class AppState: ObservableObject {
     private let autoCheckPermissionsKey = "autoCheckPermissions"
     private let autoSwitchEnabledKey = "autoSwitchEnabled"
     private let discoveredAppsKey = "discoveredApplications"
+    private let audioFeedbackEnabledKey = "audioFeedbackEnabled"
+    private let audioVolumeKey = "audioVolume"
+    private let switchNotificationsEnabledKey = "switchNotificationsEnabled"
 
     // Make init public if AppDelegate or other parts need to create it,
     // but for a singleton, private is correct.
@@ -136,7 +195,6 @@ public class AppState: ObservableObject {
     // Since we use AppState.shared, private init() is fine.
     private init() {
         self.launchAtLoginEnabled = UserDefaults.standard.bool(forKey: launchAtLoginKey)
-        // 调试时强制重置 dock/status bar 图标显示状态
         #if DEBUG
         self.hideDockIcon = false
         #else
@@ -144,9 +202,14 @@ public class AppState: ObservableObject {
         #endif
         self.autoCheckPermissions = UserDefaults.standard.object(forKey: autoCheckPermissionsKey) as? Bool ?? true // Default to auto-check
         self.autoSwitchEnabled = UserDefaults.standard.object(forKey: autoSwitchEnabledKey) as? Bool ?? true // Default to enabled
+        self.audioFeedbackEnabled = UserDefaults.standard.object(forKey: audioFeedbackEnabledKey) as? Bool ?? true // 默认启用音频反馈
+        self.audioVolume = UserDefaults.standard.object(forKey: audioVolumeKey) as? Float ?? 1.0 // Default to full volume
+        self.switchNotificationsEnabled = UserDefaults.standard.object(forKey: switchNotificationsEnabledKey) as? Bool ?? false // 默认不发送通知
         loadRules()
         loadDiscoveredApplications() // Load saved app metadata
         print("AppState initialized, rules loaded, and all settings loaded.")
+        print("[AppState DEBUG] Initial audioFeedbackEnabled: \\(self.audioFeedbackEnabled)")
+        print("[AppState DEBUG] Initial audioVolume: \\(self.audioVolume)")
     }
 
     // Discovers applications from standard locations.
@@ -226,7 +289,7 @@ public class AppState: ObservableObject {
     }
 
     // Loads saved rules from UserDefaults.
-    private func loadRules() {
+    public func loadRules() {
         if let savedMap = UserDefaults.standard.dictionary(forKey: userDefaultsKey) as? [String: String] {
             appInputSourceMap = savedMap
             print("Loaded \(savedMap.count) rules from UserDefaults.")
@@ -236,7 +299,7 @@ public class AppState: ObservableObject {
     }
 
     // Saves current rules to UserDefaults.
-    private func saveRules() {
+    public func saveRules() {
         UserDefaults.standard.set(appInputSourceMap, forKey: userDefaultsKey)
         print("Saved \(appInputSourceMap.count) rules to UserDefaults.")
     }
@@ -266,23 +329,41 @@ public class AppState: ObservableObject {
     // }
     
     // Update dock icon visibility
+    private var settingsWindow: NSWindow?
+
     public func updateDockIconVisibility() {
         DispatchQueue.main.async {
-            // 记录设置窗口
-            let settingsWindow = NSApp.windows.first { win in
-                win.title.contains("设置") || win.title.contains("TypeSmart")
+            // 记录当前活跃的设置窗口
+            self.settingsWindow = NSApp.windows.first { win in
+                win.title.contains("设置") || win.title.contains("TypeSmart") || win.title.contains("Settings")
             }
-            let wasSettingsVisible = settingsWindow?.isVisible ?? false
+            let wasSettingsVisible = self.settingsWindow?.isVisible ?? false
 
             if self.hideDockIcon {
-                // 只切换 activationPolicy，不隐藏设置窗口
+                // 切换到辅助应用模式，隐藏 Dock 图标
                 NSApp.setActivationPolicy(.accessory)
-                SimpleLogManager.shared.addLog("隐藏 Dock 图标", category: "AppState")
+                print("[AppState] 已隐藏 Dock 图标，应用切换为辅助模式")
+                
+                // 如果设置窗口之前是可见的，保持其可见状态和焦点
+                if wasSettingsVisible, let win = self.settingsWindow {
+                    // 在辅助模式下，需要强制激活应用和窗口
+                    NSApp.activate(ignoringOtherApps: true)
+                    win.makeKeyAndOrderFront(nil)
+                    // 确保窗口层级足够高，不被其他窗口遮挡
+                    win.level = .floating
+                    // 短暂延迟后恢复正常层级
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        win.level = .normal
+                        win.makeKeyAndOrderFront(nil)
+                    }
+                }
             } else {
+                // 切换到常规应用模式，显示 Dock 图标
                 NSApp.setActivationPolicy(.regular)
-                SimpleLogManager.shared.addLog("显示 Dock 图标", category: "AppState")
-                // 恢复设置窗口显示
-                if wasSettingsVisible, let win = settingsWindow {
+                print("[AppState] 已显示 Dock 图标，应用切换为常规模式")
+                
+                // 恢复设置窗口的显示状态
+                if wasSettingsVisible, let win = self.settingsWindow {
                     NSApp.activate(ignoringOtherApps: true)
                     win.makeKeyAndOrderFront(nil)
                 }
@@ -311,7 +392,7 @@ public class AppState: ObservableObject {
             NSApp.activate(ignoringOtherApps: true)
             let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
             let _ = AXIsProcessTrustedWithOptions(options)
-            SimpleLogManager.shared.addLog("手动请求辅助功能权限", category: "AppState")
+            print("[AppState] 手动请求辅助功能权限")
         }
     }
     
@@ -425,7 +506,9 @@ extension AppState {
                         path: recoveredInfo.path
                     )
                     isUpdated = true
-                    SimpleLogManager.shared.addLog("恢复应用 \(app.id) 的名称: \(recoveredInfo.name)", category: "AppState")
+                    DispatchQueue.main.async {
+                        print("[AppState] 恢复应用 \\(app.id) 的名称: \\(recoveredInfo.name)")
+                    }
                 }
             }
             
@@ -439,7 +522,9 @@ extension AppState {
                         path: recoveredInfo.path
                     )
                     isUpdated = true
-                    SimpleLogManager.shared.addLog("恢复应用 \(app.id) 的路径: \(recoveredInfo.path.path)", category: "AppState")
+                    DispatchQueue.main.async {
+                        print("[AppState] 恢复应用 \\(app.id) 的路径: \\(recoveredInfo.path.path)")
+                    }
                 }
             }
             
@@ -454,7 +539,9 @@ extension AppState {
         if needsSave {
             discoveredApplications = updatedApps.sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
             saveDiscoveredApplications()
-            SimpleLogManager.shared.addLog("应用信息恢复完成，更新了 \(discoveredApplications.count) 个应用", category: "AppState")
+            DispatchQueue.main.async {
+                print("[AppState] 应用信息恢复完成，更新了 \\(self.discoveredApplications.count) 个应用")
+            }
         }
     }
     
@@ -518,7 +605,9 @@ extension AppState {
                 // 尝试恢复应用信息
                 if let recoveredInfo = recoverAppInfoByBundleID(bundleID) {
                     enhancedApps[bundleID] = recoveredInfo
-                    SimpleLogManager.shared.addLog("为规则增强应用信息: \(bundleID) -> \(recoveredInfo.name)", category: "AppState")
+                    DispatchQueue.main.async {
+                        print("[AppState] 为规则增强应用信息: \\(bundleID) -> \\(recoveredInfo.name)")
+                    }
                 } else {
                     // 创建占位符，使用Bundle ID作为名称
                     enhancedApps[bundleID] = AppInfo(
@@ -526,7 +615,9 @@ extension AppState {
                         name: bundleID,
                         path: URL(fileURLWithPath: "/Applications") // 占位路径
                     )
-                    SimpleLogManager.shared.addLog("为规则创建占位符: \(bundleID)", category: "AppState")
+                    DispatchQueue.main.async {
+                        print("[AppState] 为规则创建占位符: \\(bundleID)")
+                    }
                 }
             }
         }
@@ -534,5 +625,76 @@ extension AppState {
         // 更新discoveredApplications
         discoveredApplications = Array(enhancedApps.values).sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
         saveDiscoveredApplications()
+    }
+    
+    // 添加动态获取系统音效的方法
+    public func fetchAvailableSystemSounds() -> [String] {
+        let soundDirectories = [
+            "/System/Library/Sounds",
+            "/Library/Sounds",
+            "~/Library/Sounds"
+        ]
+
+        var systemSounds: [String] = []
+        let fileManager = FileManager.default
+
+        for directory in soundDirectories {
+            let expandedPath = (directory as NSString).expandingTildeInPath
+            if let soundFiles = try? fileManager.contentsOfDirectory(atPath: expandedPath) {
+                for file in soundFiles where file.hasSuffix(".aiff") || file.hasSuffix(".wav") {
+                    systemSounds.append((file as NSString).deletingPathExtension)
+                }
+            }
+        }
+
+        return systemSounds
+    }
+    
+    public func playNotificationSound(isSuccess: Bool) {
+        let audioName = isSuccess ? successAudioName : failureAudioName
+
+        // 如果用户未设置音效，使用默认音效
+        let soundToPlay = audioName.isEmpty ? (isSuccess ? "Frog" : "Purr") : audioName
+
+        if let sound = NSSound(named: soundToPlay) {
+            if !sound.isPlaying {
+                sound.play()
+                print("[AppState] 播放音效: \(soundToPlay)")
+            }
+        } else {
+            // 备用方案：使用系统音效或提示音
+            let fallbackSound = isSuccess ? "Tink" : "Basso"
+            if let fallback = NSSound(named: fallbackSound) {
+                fallback.play()
+                print("[AppState] 使用备用音效: \(fallbackSound)")
+            } else {
+                NSSound.beep()
+                print("[AppState] 音效 \(soundToPlay) 未找到，使用系统提示音。")
+            }
+        }
+    }
+    
+    // 添加音频配置验证方法
+    public func validateAudioConfiguration() {
+        // 确保音量在有效范围内
+        if audioVolume < 0.0 || audioVolume > 1.0 {
+            print("[AppState] 音频音量超出范围: \(audioVolume)，重置为1.0")
+            audioVolume = 1.0
+        }
+        
+        // 验证成功音效名称
+        let availableSounds = availableAudioNames
+        if !successAudioName.isEmpty && !availableSounds.contains(successAudioName) {
+            print("[AppState] 成功音效名称无效: \(successAudioName)，重置为Frog")
+            successAudioName = "Frog"
+        }
+        
+        // 验证失败音效名称
+        if !failureAudioName.isEmpty && !availableSounds.contains(failureAudioName) {
+            print("[AppState] 失败音效名称无效: \(failureAudioName)，重置为Purr")
+            failureAudioName = "Purr"
+        }
+        
+        print("[AppState] 音频配置验证完成 - 音量: \(audioVolume), 成功音效: \(successAudioName), 失败音效: \(failureAudioName)")
     }
 }

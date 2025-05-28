@@ -43,8 +43,8 @@ struct AboutUsView: View {
                             .foregroundColor(.primary)
                         
                         VStack(alignment: .leading, spacing: 12) {
-                            InfoRow(title: "版本", value: "1.8.0", systemImage: "number.circle")
-                            InfoRow(title: "构建号", value: "20250526", systemImage: "hammer.circle")
+                            InfoRow(title: "版本", value: version, systemImage: "number.circle")
+                            InfoRow(title: "构建号", value: build, systemImage: "hammer.circle")
                             InfoRow(title: "系统要求", value: "macOS 15.4+", systemImage: "desktopcomputer.and.arrow.down")
                             InfoRow(title: "开发者", value: "王汪旺", systemImage: "person.circle")
                         }
@@ -80,7 +80,7 @@ struct AboutUsView: View {
                             
                             FeatureRow(
                                 title: "后台运行",
-                                description: "在系统状态栏中静默运行，不影响日常使用",
+                                description: "静默运行，不影响日常使用",
                                 systemImage: "moon.circle"
                             )
                         }
